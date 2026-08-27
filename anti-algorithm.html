@@ -1,0 +1,3084 @@
+<html lang="zh"><head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Anti-Algorithm Bookmark</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #f5f6f8;
+      --surface: #ffffff;
+      --border: rgba(0, 0, 0, 0.06);
+      --accent: #3a3a3a;
+      --text: #2a2a2a;
+      --muted: #aaaaaa;
+      --hover: rgba(0, 0, 0, 0.03);
+      --font-main: 'Microsoft YaHei', 'PingFang SC', 'Noto Sans', 'Hiragino Sans', sans-serif;
+    }
+
+    body {
+      background: #f0f2f7;
+      color: var(--text);
+      font-family: var(--font-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 20px 80px;
+      position: relative;
+      overflow-x: auto;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 1200px;
+      position: relative;
+      z-index: 2;
+    }
+
+    /* Form */
+    .form-box {
+      background: var(--surface);
+      padding: 14px 16px;
+      position: relative;
+      border-radius: 16px;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.04);
+      z-index: 3;
+    }
+
+    .form-title {
+      font-size: 0.58rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .category-select {
+      border: 1.5px solid var(--border);
+      background: #fafafa;
+      color: var(--text);
+      font-family: var(--font-main);
+      font-size: 0.72rem;
+      padding: 6px 10px;
+      border-radius: 10px;
+      outline: none;
+      min-width: 110px;
+      transition: border-color 0.2s;
+    }
+
+    .category-select:focus {
+      border-color: rgba(0,0,0,0.2);
+    }
+
+    .form-row {
+      display: flex;
+      gap: 7px;
+      align-items: stretch;
+      margin-bottom: 8px;
+      justify-content: space-between;
+    }
+
+    .form-controls {
+      display: flex;
+      gap: 7px;
+      align-items: stretch;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .form-actions {
+      display: flex;
+      gap: 7px;
+      align-items: stretch;
+      flex-shrink: 0;
+    }
+
+    .form-actions button {
+      min-width: 102px;
+      justify-content: center;
+      text-align: center;
+    }
+
+    .new-category-form {
+      display: none;
+      align-items: stretch;
+      gap: 7px;
+      margin-top: 6px;
+      justify-content: flex-end;
+    }
+
+    .new-category-form input {
+      min-width: 110px;
+      border: 1.5px solid var(--border);
+      background: #fafafa;
+      color: var(--text);
+      font-family: var(--font-main);
+      font-size: 0.72rem;
+      padding: 6px 10px;
+      border-radius: 10px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .new-category-form input:focus {
+      border-color: rgba(0,0,0,0.2);
+      background: #fff;
+    }
+
+    .new-category-form button {
+      padding: 6px 12px;
+      font-size: 0.66rem;
+    }
+
+    .form-row input {
+      flex: 1;
+      background: #fafafa;
+      border: 1.5px solid var(--border);
+      color: var(--text);
+      font-family: var(--font-main);
+      font-size: 0.8rem;
+      padding: 8px 12px;
+      border-radius: 10px;
+      outline: none;
+      transition: border-color 0.2s, background 0.2s;
+    }
+
+    .form-row input::placeholder { color: #ccc; }
+
+    .form-row input:focus {
+      border-color: rgba(0,0,0,0.2);
+      background: #fff;
+    }
+
+    .form-row button {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      font-family: var(--font-main);
+      font-size: 0.72rem;
+      font-weight: 400;
+      letter-spacing: 0.08em;
+      padding: 8px 14px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: opacity 0.18s, transform 0.12s;
+    }
+
+    .form-row .secondary-btn {
+      background: rgba(255, 255, 255, 0.92);
+      color: #555;
+      box-shadow: inset 0 0 0 1.5px var(--border);
+    }
+
+    .form-row .secondary-btn:hover {
+      opacity: 1;
+      background: #fff;
+      color: #222;
+    }
+
+    .form-row button:hover { opacity: 0.78; }
+    .form-row button:active { transform: scale(0.97); }
+
+    /* Error message */
+    .error-msg {
+      color: #e07070;
+      font-size: 0.64rem;
+      margin-top: 6px;
+      letter-spacing: 0.04em;
+      display: none;
+    }
+
+    /* Lists */
+    .section-label {
+      font-size: 0.78rem;
+      letter-spacing: 0.08em;
+      text-transform: none;
+      color: var(--category-text-color, #666);
+      margin-bottom: 14px;
+      padding-bottom: 0;
+      border-bottom: none;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .section-title-wrap {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .category-name-btn {
+      background: none;
+      border: none;
+      color: inherit;
+      font: inherit;
+      font-weight: 500;
+      letter-spacing: inherit;
+      text-transform: inherit;
+      cursor: grab;
+      padding: 0;
+      user-select: none;
+      transition: color 0.15s;
+    }
+
+    .category-name-btn:hover {
+      color: #999;
+    }
+
+    .category-name-btn:active {
+      cursor: grabbing;
+    }
+
+    .section-label.cat-drag-over-left {
+      box-shadow: -2px 0 0 #ccc;
+      border-radius: 2px;
+    }
+
+    .section-label.cat-drag-over-right {
+      box-shadow: 2px 0 0 #ccc;
+      border-radius: 2px;
+    }
+
+    .section.cat-dragging {
+      opacity: 0.35;
+    }
+
+    .category-actions {
+      position: relative;
+    }
+
+    .category-actions-toggle {
+      width: 22px;
+      height: 22px;
+      border: none;
+      border-radius: 999px;
+      background: rgba(0, 0, 0, 0.07);
+      color: #888;
+      font-size: 12px;
+      line-height: 1;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+    }
+
+    .category-actions-toggle:hover,
+    .category-actions-toggle.is-open {
+      background: rgba(0, 0, 0, 0.14);
+      color: #444;
+    }
+
+    .category-actions-menu {
+      position: absolute;
+      right: 0;
+      top: 26px;
+      min-width: 120px;
+      display: none;
+      flex-direction: column;
+      gap: 6px;
+      padding: 6px;
+      border: none;
+      border-radius: 12px;
+      background: rgba(245, 245, 248, 0.72);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(0, 0, 0, 0.06);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12), 0 2px 6px rgba(0,0,0,0.07);
+      z-index: 30;
+    }
+
+    .category-actions-menu.is-open {
+      display: flex;
+      animation: menuIn 0.15s ease;
+    }
+
+    .category-actions-menu.is-flipped {
+      top: auto;
+      bottom: 22px;
+    }
+
+    .category-actions-menu.is-flipped {
+      top: auto;
+      bottom: 26px;
+    }
+
+    .category-action-btn {
+      height: 28px;
+      border: 1px solid rgba(0, 0, 0, 0.06);
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.22);
+      color: #555;
+      font-size: 12px;
+      font-family: var(--font-main);
+      cursor: pointer;
+      text-align: left;
+      padding: 0 10px;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+      transition: background 0.12s, color 0.12s, border-color 0.12s;
+    }
+
+    .category-action-btn:hover {
+      background: rgba(255,255,255,0.34);
+      border-color: rgba(0, 0, 0, 0.1);
+      color: #222;
+    }
+
+    .category-action-btn.is-danger {
+      border-color: rgba(220, 60, 60, 0.12);
+      background: rgba(220, 60, 60, 0.04);
+      color: #d06060;
+    }
+
+    .category-action-btn.is-danger:hover {
+      background: rgba(220, 60, 60, 0.08);
+      border-color: rgba(220, 60, 60, 0.16);
+      color: #c04040;
+    }
+
+    #sections {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      overflow: visible;
+      width: max-content;
+      min-width: 100%;
+      padding-bottom: 8px;
+    }
+
+    #sections::-webkit-scrollbar {
+      height: 4px;
+    }
+
+    #sections::-webkit-scrollbar-thumb {
+      background: rgba(0,0,0,0.1);
+      border-radius: 999px;
+    }
+
+    #sections::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .section {
+      flex: 0 0 210px;
+      min-width: 210px;
+      margin-bottom: 0;
+      border-radius: 14px;
+      transition: background 0.2s;
+    }
+
+    .section.drop-target {
+      background: rgba(0, 0, 0, 0.02);
+    }
+
+    .list {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    .list-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      width: 100%;
+      min-height: 52px;
+      padding: 12px 14px;
+      border: none;
+      border-radius: 14px;
+      margin-bottom: 5px;
+      background: var(--item-bg, var(--surface));
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05), 0 0 0 1px rgba(0,0,0,0.04);
+      animation: fadeUp 0.22s ease;
+      position: relative;
+      transition: box-shadow 0.18s, transform 0.18s;
+      cursor: grab;
+      overflow: visible;
+    }
+
+    .list-item:hover {
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.09), 0 0 0 1px rgba(0,0,0,0.05);
+    }
+
+    .list-item:active {
+      cursor: grabbing;
+    }
+
+    .list-item.drop-before {
+      box-shadow: 0 -2px 0 rgba(0,0,0,0.15), 0 1px 4px rgba(0,0,0,0.05);
+    }
+
+    .list-item.drop-after {
+      box-shadow: 0 2px 0 rgba(0,0,0,0.15), 0 1px 4px rgba(0,0,0,0.05);
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(6px) scale(0.98); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .item-actions {
+      position: absolute;
+      right: 6px;
+      top: 6px;
+      z-index: 9;
+    }
+
+    .yt-update-dot {
+      position: absolute;
+      top: 9px;
+      right: 32px;
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #ff5b5b;
+      box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.9);
+      opacity: 0;
+      transform: scale(0.72);
+      transition: opacity 0.16s ease, transform 0.16s ease;
+      pointer-events: none;
+      z-index: 8;
+    }
+
+    .yt-update-dot.is-visible {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    .item-actions-toggle {
+      width: 20px;
+      height: 20px;
+      border: none;
+      border-radius: 999px;
+      background: transparent;
+      color: #bbb;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      line-height: 1;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transform: scale(0.8);
+      transition: opacity 0.16s ease, transform 0.16s ease, background 0.15s, color 0.15s;
+    }
+
+    .list-item:hover .item-actions-toggle,
+    .item-actions-toggle.is-open {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    .item-actions-toggle:hover {
+      background: rgba(0, 0, 0, 0.07);
+      color: #777;
+    }
+
+    .item-actions-menu {
+      position: absolute;
+      right: 0;
+      top: 28px;
+      min-width: 128px;
+      display: none;
+      flex-direction: column;
+      gap: 2px;
+      padding: 6px;
+      border: none;
+      border-radius: 12px;
+      background: rgba(245, 245, 248, 0.72);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(0, 0, 0, 0.06);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12), 0 2px 6px rgba(0,0,0,0.07);
+      z-index: 20;
+    }
+
+    .item-actions-menu.is-open {
+      display: flex;
+      animation: menuIn 0.15s ease;
+    }
+
+    .item-actions-menu.is-flipped {
+      top: auto;
+      bottom: 28px;
+    }
+
+    @keyframes menuIn {
+      from { opacity: 0; transform: scale(0.94) translateY(-4px); }
+      to   { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    .item-color-menu {
+      display: flex;
+      gap: 6px;
+      flex-wrap: nowrap;
+      padding: 6px 8px 4px;
+    }
+
+    .item-color-option {
+      width: 15px;
+      height: 15px;
+      border: 1.5px solid rgba(0,0,0,0.1);
+      border-radius: 50%;
+      padding: 0;
+      cursor: pointer;
+      background: #fff;
+      transition: transform 0.14s, border-color 0.14s;
+    }
+
+    .item-color-option:hover {
+      transform: scale(1.25);
+      border-color: rgba(0,0,0,0.35);
+    }
+
+    .item-color-option.is-active {
+      border-color: rgba(0,0,0,0.5);
+      transform: scale(1.15);
+    }
+
+    .item-favicon {
+      width: 20px;
+      height: 20px;
+      flex-shrink: 0;
+      opacity: 0.8;
+      border-radius: 4px;
+    }
+
+    .item-main {
+      flex: 1;
+      color: inherit;
+      text-decoration: none;
+      min-width: 0;
+    }
+
+    .item-main:hover .item-title {
+      opacity: 0.6;
+    }
+
+    .item-body {
+      flex: 1;
+      overflow: hidden;
+    }
+
+    .item-title {
+      font-family: var(--font-main);
+      font-size: 0.88rem;
+      font-weight: 400;
+      color: var(--item-text-color, var(--text));
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-bottom: 0;
+      transition: opacity 0.15s;
+    }
+
+    .item-delete {
+      background: none;
+      border: none;
+      color: #ccc;
+      cursor: pointer;
+      font-size: 1rem;
+      padding: 4px 6px;
+      transition: color 0.2s;
+      flex-shrink: 0;
+    }
+
+    .item-delete:hover { color: #e07070; }
+
+    .item-actions-row {
+      display: flex;
+      gap: 6px;
+      padding: 4px 8px 6px;
+    }
+
+    .item-actions-row .category-action-btn {
+      flex: 1;
+      text-align: center;
+      padding: 0 6px;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 20px 0 4px;
+      color: #ddd;
+      font-size: 0.75rem;
+      letter-spacing: 0.08em;
+    }
+
+    @media (max-width: 900px) {
+      .section {
+        flex-basis: 200px;
+        min-width: 200px;
+      }
+
+      .form-row {
+        flex-direction: column;
+      }
+
+      .form-controls,
+      .form-actions {
+        width: 100%;
+      }
+
+      .form-actions button {
+        flex: 1;
+      }
+    }
+
+    /* ── Background decoration ── */
+    .bg-blobs {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      overflow: hidden;
+    }
+
+    .bottom-brand {
+      position: fixed;
+      left: 50%;
+      bottom: -10px;
+      transform: translateX(-50%);
+      font-family: "Times New Roman", Georgia, serif;
+      font-size: clamp(58px, 9vw, 170px);
+      letter-spacing: 0.08em;
+      line-height: 0.9;
+      color: rgba(120, 110, 120, 0.08);
+      white-space: nowrap;
+      pointer-events: none;
+      user-select: none;
+      z-index: 0;
+      text-transform: uppercase;
+    }
+
+    .bg-blob {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      opacity: 0.38;
+    }
+
+    .bg-blob-1 {
+      width: 520px; height: 520px;
+      top: -120px; left: -100px;
+      background: radial-gradient(circle, #c8d8f8 0%, #dce8ff 60%, transparent 100%);
+      animation: blobDrift1 18s ease-in-out infinite alternate;
+    }
+
+    .bg-blob-2 {
+      width: 420px; height: 420px;
+      top: 30%; right: -80px;
+      background: radial-gradient(circle, #f5e0f8 0%, #eddff5 60%, transparent 100%);
+      animation: blobDrift2 22s ease-in-out infinite alternate;
+    }
+
+    .bg-blob-3 {
+      width: 360px; height: 360px;
+      bottom: 60px; left: 22%;
+      background: radial-gradient(circle, #d5f0e8 0%, #dff5ec 60%, transparent 100%);
+      animation: blobDrift3 26s ease-in-out infinite alternate;
+    }
+
+    .bg-blob-4 {
+      width: 260px; height: 260px;
+      top: 55%; left: 42%;
+      background: radial-gradient(circle, #fde8d4 0%, #fceee2 60%, transparent 100%);
+      animation: blobDrift4 20s ease-in-out infinite alternate;
+    }
+
+    @keyframes blobDrift1 {
+      from { transform: translate(0, 0) scale(1); }
+      to   { transform: translate(40px, 30px) scale(1.08); }
+    }
+    @keyframes blobDrift2 {
+      from { transform: translate(0, 0) scale(1); }
+      to   { transform: translate(-30px, -40px) scale(1.06); }
+    }
+    @keyframes blobDrift3 {
+      from { transform: translate(0, 0) scale(1); }
+      to   { transform: translate(20px, -25px) scale(1.05); }
+    }
+    @keyframes blobDrift4 {
+      from { transform: translate(0, 0) scale(1); }
+      to   { transform: translate(-20px, 30px) scale(1.1); }
+    }
+
+    /* ── Settings trigger ── */
+    .form-area {
+      position: relative;
+      width: 52%;
+      margin: 0 auto 44px;
+    }
+
+    .form-area .form-box {
+      width: 100%;
+      margin: 0;
+    }
+
+    .settings-trigger {
+      position: absolute;
+      right: -40px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 30px;
+      height: 30px;
+      border: none;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.75);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      color: #bbb;
+      font-size: 14px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+      transition: color 0.2s, background 0.2s, transform 0.35s;
+    }
+
+    .settings-trigger:hover {
+      color: #777;
+      background: rgba(255, 255, 255, 0.95);
+    }
+
+    .settings-trigger.is-open {
+      color: #555;
+      transform: translateY(-50%) rotate(90deg);
+    }
+
+    /* ── Settings panel ── */
+    .settings-panel {
+      display: none;
+      position: absolute;
+      top: calc(100% + 10px);
+      left: 0;
+      right: 0;
+      background: rgba(255, 255, 255, 0.88);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-radius: 16px;
+      padding: 18px 20px;
+      box-shadow: 0 6px 28px rgba(0,0,0,0.09), 0 1px 4px rgba(0,0,0,0.04);
+      z-index: 100;
+    }
+
+    .settings-panel.is-open {
+      display: block;
+      animation: panelIn 0.18s ease;
+    }
+
+    @keyframes panelIn {
+      from { opacity: 0; transform: translateY(-6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .settings-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .settings-row:last-child { margin-bottom: 0; }
+
+    .settings-label {
+      font-size: 0.66rem;
+      color: #aaa;
+      letter-spacing: 0.08em;
+      min-width: 70px;
+      flex-shrink: 0;
+    }
+
+    .settings-slider {
+      flex: 1;
+      height: 3px;
+      accent-color: #888;
+      cursor: pointer;
+      outline: none;
+    }
+
+    .settings-val {
+      font-size: 0.65rem;
+      color: #bbb;
+      min-width: 32px;
+      text-align: right;
+    }
+
+    .theme-swatches {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .settings-upload {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .settings-upload-btn,
+    .settings-clear-btn {
+      height: 30px;
+      border: none;
+      border-radius: 999px;
+      padding: 0 12px;
+      font-size: 0.72rem;
+      font-family: var(--font-main);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
+      vertical-align: middle;
+      transition: background 0.15s, color 0.15s, opacity 0.15s;
+    }
+
+    .settings-upload-btn {
+      background: rgba(255, 255, 255, 0.9);
+      color: #5c5c5c;
+      box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.06);
+    }
+
+    .settings-upload-btn:hover {
+      background: rgba(255, 255, 255, 1);
+      color: #222;
+    }
+
+    .settings-clear-btn {
+      background: rgba(220, 60, 60, 0.08);
+      color: #c05050;
+    }
+
+    .settings-clear-btn:hover {
+      background: rgba(220, 60, 60, 0.12);
+      color: #a53c3c;
+    }
+
+    .settings-upload-note {
+      font-size: 0.64rem;
+      color: #b2b2b2;
+      letter-spacing: 0.03em;
+    }
+
+    .settings-transfer {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .settings-text-input {
+      flex: 1;
+      min-width: 0;
+      height: 32px;
+      border: none;
+      border-radius: 10px;
+      padding: 0 12px;
+      background: rgba(255, 255, 255, 0.8);
+      color: #5a5a5a;
+      font-size: 0.74rem;
+      font-family: var(--font-main);
+      box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.06);
+      outline: none;
+    }
+
+    .settings-text-input:focus {
+      box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.14);
+      background: rgba(255, 255, 255, 0.95);
+    }
+
+    .settings-color-input {
+      width: 36px;
+      height: 32px;
+      border: none;
+      border-radius: 10px;
+      padding: 2px;
+      background: rgba(255, 255, 255, 0.8);
+      box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.06);
+      cursor: pointer;
+    }
+
+    .settings-inline-tools {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: flex-start;
+    }
+
+    .settings-inline-group {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .settings-inline-note {
+      font-size: 0.64rem;
+      color: #b2b2b2;
+      white-space: nowrap;
+    }
+
+    .theme-swatch {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      cursor: pointer;
+      border: 2.5px solid transparent;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      transition: transform 0.14s, border-color 0.14s;
+      outline: none;
+    }
+
+    .theme-swatch:hover { transform: scale(1.15); }
+    .theme-swatch.is-active { border-color: #777; transform: scale(1.1); }
+
+    /* Apply frosted-glass styling to cards and form */
+    .form-box {
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      background: rgba(255, 255, 255, 0.72) !important;
+    }
+
+    .list-item {
+      background: var(--item-bg, rgba(255, 255, 255, 0.82)) !important;
+    }
+
+    .list-item:hover {
+      background: var(--item-hover-bg, rgba(255, 255, 255, 0.96)) !important;
+    }
+
+    .list-item:has(.item-actions-menu.is-open) {
+      z-index: 50;
+    }
+
+    /* Keep action menus translucent despite earlier style rules */
+    .item-actions-menu,
+    .category-actions-menu {
+      background: rgba(255, 255, 255, 0.35) !important;
+      border: 1px solid rgba(255, 255, 255, 0.45) !important;
+      backdrop-filter: blur(16px) saturate(1.1);
+      -webkit-backdrop-filter: blur(16px) saturate(1.1);
+    }
+
+  </style>
+</head>
+<body>
+
+<div class="bg-blobs">
+  <div class="bg-blob bg-blob-1"></div>
+  <div class="bg-blob bg-blob-2"></div>
+  <div class="bg-blob bg-blob-3"></div>
+  <div class="bg-blob bg-blob-4"></div>
+</div>
+
+<div class="container">
+  <div class="form-area">
+    <div class="form-box">
+      <div class="form-row">
+        <div class="form-controls">
+          <input type="text" id="urlInput" placeholder="Enter a URL">
+          <select id="categorySelect" class="category-select"></select>
+        </div>
+        <div class="form-actions">
+          <button type="button" id="addBookmarkBtn" onclick="addUrl()">Add to Bookmarks</button>
+          <button type="button" id="searchBtn" onclick="searchGoogle()">Search</button>
+        </div>
+      </div>
+      <div id="newCategoryForm" class="new-category-form">
+        <input type="text" id="newCategoryInput" placeholder="Enter category name">
+        <button onclick="addCategory()">Save</button>
+      </div>
+      <div class="error-msg" id="errorMsg">⚠ Enter a valid URL starting with http:// or https://</div>
+    </div>
+
+    <button class="settings-trigger" id="settingsTrigger" title="Page Settings">⚙</button>
+
+    <div class="settings-panel" id="settingsPanel">
+      <div class="settings-row">
+        <span class="settings-label">Layout Spacing</span>
+        <div class="settings-inline-tools">
+          <div class="settings-inline-group">
+            <span class="settings-inline-note">Row Gap</span>
+            <input type="range" class="settings-slider" id="itemGapSlider" min="2" max="22" value="17">
+            <span class="settings-val"><span id="itemGapVal">17</span>px</span>
+          </div>
+          <div class="settings-inline-group">
+            <span class="settings-inline-note">Category Gap</span>
+            <input type="range" class="settings-slider" id="colGapSlider" min="6" max="48" value="37">
+            <span class="settings-val"><span id="colGapVal">37</span>px</span>
+          </div>
+          <button type="button" class="settings-clear-btn" id="layoutSpacingResetBtn">Reset</button>
+        </div>
+      </div>
+      <div class="settings-row">
+        <span class="settings-label">Bookmark Card</span>
+        <div class="settings-inline-tools">
+          <div class="settings-inline-group">
+            <span class="settings-inline-note">Width</span>
+            <input type="range" class="settings-slider" id="itemWidthSlider" min="70" max="100" value="100">
+            <span class="settings-val"><span id="itemWidthVal">100</span>%</span>
+          </div>
+          <div class="settings-inline-group">
+            <span class="settings-inline-note">Height</span>
+            <input type="range" class="settings-slider" id="itemHeightSlider" min="44" max="90" value="52">
+            <span class="settings-val"><span id="itemHeightVal">52</span>px</span>
+          </div>
+          <button type="button" class="settings-clear-btn" id="itemSizeResetBtn">Reset</button>
+        </div>
+      </div>
+      <div class="settings-row">
+        <span class="settings-label">Text Colors</span>
+        <div class="settings-inline-tools">
+          <div class="settings-inline-group">
+            <span class="settings-inline-note">Category Name Color</span>
+            <input type="color" class="settings-color-input" id="categoryTextColorInput" value="#666666" title="Set category name color">
+          </div>
+          <div class="settings-inline-group">
+            <span class="settings-inline-note">Bookmark Name Color</span>
+            <input type="color" class="settings-color-input" id="itemTextColorInput" value="#2a2a2a" title="Set bookmark name color">
+          </div>
+        </div>
+      </div>
+      <div class="settings-row">
+        <span class="settings-label">Page Background</span>
+        <div class="theme-swatches" id="themeSwatches"></div>
+      </div>
+      <div class="settings-row">
+        <span class="settings-label">Search Engine</span>
+        <div class="settings-upload" style="flex:1; min-width:0;">
+          <select id="searchEnginePreset" class="category-select" style="min-width: 140px;">
+            <option value="https://www.google.com/search?q={query}">Google</option>
+            <option value="https://www.bing.com/search?q={query}">Bing</option>
+            <option value="https://zh.wikipedia.org/wiki/Special:Search?search={query}">Wikipedia</option>
+            <option value="__custom__">Custom</option>
+          </select>
+          <input type="text" class="settings-text-input" id="searchEngineInput" placeholder="https://www.google.com/search?q={query}">
+        </div>
+      </div>
+      <div class="settings-row">
+        <span class="settings-label">Default Button</span>
+        <div class="settings-upload" style="flex:1; min-width:0;">
+          <select id="defaultActionSelect" class="category-select" style="min-width: 140px;">
+            <option value="add">Add to Bookmarks</option>
+            <option value="search">Search</option>
+          </select>
+        </div>
+      </div>
+      <div class="settings-row">
+        <span class="settings-label">YouTube Updates</span>
+        <div class="settings-upload" style="flex:1; min-width:0;">
+          <select id="youtubePollMinutesSelect" class="category-select" style="min-width: 110px;">
+            <option value="30">30 Minutes</option>
+            <option value="60">1 Hour</option>
+            <option value="180">3 Hours</option>
+            <option value="360">6 Hours</option>
+          </select>
+          <select id="youtubeCheckDaysSelect" class="category-select" style="min-width: 110px;">
+            <option value="0">Off</option>
+            <option value="1">1 Day</option>
+            <option value="2">2 Days</option>
+            <option value="3">3 Days</option>
+          </select>
+          <input type="text" class="settings-text-input" id="youtubeApiKeyInput" placeholder="Enter Google API Key">
+          <button type="button" class="settings-upload-btn" id="youtubeCheckNowBtn">Check Now</button>
+        </div>
+      </div>
+      <div class="settings-row">
+        <span class="settings-label">Background Image</span>
+        <div class="settings-upload">
+          <input type="file" id="bgImageInput" accept="image/*" hidden>
+          <button type="button" class="settings-upload-btn" id="bgImageBtn">Upload Image</button>
+          <button type="button" class="settings-clear-btn" id="bgImageClearBtn">Restore Theme</button>
+          <span class="settings-upload-note" id="bgImageStatus">No custom image in use</span>
+        </div>
+      </div>
+      <div class="settings-row">
+        <span class="settings-label">Bottom Text</span>
+        <input type="text" class="settings-text-input" id="bottomBrandTextInput" placeholder="Enter bottom text">
+        <input type="color" class="settings-color-input" id="bottomBrandColorInput" value="#786e78" title="Set bottom text color">
+      </div>
+      <div class="settings-row">
+        <span class="settings-label">Data Transfer</span>
+        <div class="settings-transfer">
+          <input type="file" id="dataImportInput" accept="application/json,.json" hidden>
+          <button type="button" class="settings-upload-btn" id="dataExportBtn">Export Data</button>
+          <button type="button" class="settings-upload-btn" id="dataImportBtn">Import Data</button>
+          <span class="settings-upload-note" id="dataTransferStatus">Export JSON for import in another browser</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="sections"></div>
+
+</div>
+
+<div class="bottom-brand" aria-hidden="true">ANTI ALGORITHM</div>
+
+<script>
+  const STORAGE_KEY = 'bookmark_app_state_v1';
+  const YT_TITLE_CACHE_KEY = 'yt_channel_title_cache_v1';
+  const ITEM_TINTS = ['#ffffff', '#f4e7c9', '#d9eefb', '#dff1de', '#e7dcf8', '#f7dfe8'];
+  const BASE_CATEGORIES = ['Cryptocurrency', 'News', 'Read Later'];
+  const OTHERS_CATEGORY = 'other';
+  const ADD_CATEGORY_OPTION = '__add_new_category__';
+  const CATEGORIES = [...BASE_CATEGORIES];
+  const defaultLinks = [
+    { title: 'CoinMarketCap', url: 'https://coinmarketcap.com', category: 'Cryptocurrency' },
+    { title: 'CoinGecko', url: 'https://www.coingecko.com', category: 'Cryptocurrency' },
+    { title: 'Reuters', url: 'https://www.reuters.com', category: 'News' },
+    { title: 'BBC News', url: 'https://www.bbc.com/news', category: 'News' },
+  ];
+
+  let links = [...defaultLinks];
+  let draggedIndex = null;
+  let openActionMenuNode = null;
+  let openCategoryMenuNode = null;
+  let categoryFormOpenedAt = 0;
+  let youtubeUpdateTimer = null;
+
+  function generateLinkId() {
+    return `link_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
+  }
+
+  function findLinkIndexById(linkId) {
+    return links.findIndex((link) => link.id === linkId);
+  }
+
+  function updateLinkById(linkId, updater) {
+    const index = findLinkIndexById(linkId);
+    if (index < 0) return null;
+    const current = links[index];
+    const next = updater(current);
+    if (!next) return current;
+    links[index] = next;
+    return next;
+  }
+
+  function getFavicon(url) {
+    try {
+      const parsed = new URL(url);
+      if (parsed.protocol === 'file:') {
+        const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect x="4" y="3" width="24" height="26" rx="5" fill="#ffd95a"/><path d="M21 3v8h7" fill="#ffe896"/><path d="M21 3l7 8h-7z" fill="#ffc93a"/><rect x="9" y="16" width="14" height="2.2" rx="1.1" fill="#8a6a00"/><rect x="9" y="20.5" width="10" height="2.2" rx="1.1" fill="#8a6a00"/></svg>`;
+        return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
+      }
+      const domain = parsed.hostname;
+      return `https://www.google.com/s2/favicons?sz=32&domain=${domain}`;
+    } catch { return ''; }
+  }
+
+  function getTitle(url) {
+    try {
+      const parsed = new URL(url);
+      if (parsed.protocol === 'file:') {
+        const parts = parsed.pathname.split('/').filter(Boolean);
+        const filename = parts.length > 0 ? parts[parts.length - 1] : 'local-file';
+        return decodeURIComponent(filename);
+      }
+      return parsed.hostname.replace('www.', '');
+    } catch { return url; }
+  }
+
+  function applyState(sourceCategories, sourceLinks) {
+    const normalizedCategories = [...new Set(
+      sourceCategories
+        .map(item => String(item || '').trim())
+        .map((name) => (name === 'others' ? OTHERS_CATEGORY : name))
+        .filter(Boolean)
+    )];
+
+    CATEGORIES.length = 0;
+    if (normalizedCategories.length > 0) {
+      CATEGORIES.push(...normalizedCategories);
+    } else {
+      CATEGORIES.push(...BASE_CATEGORIES);
+    }
+    const fallbackCategory = CATEGORIES[0];
+
+    links = sourceLinks
+      .filter(link => link && typeof link.url === 'string')
+      .map((link) => {
+        const rawCategory = String(link.category || '').trim();
+        const normalizedCategory = rawCategory === 'others' ? OTHERS_CATEGORY : rawCategory;
+        const category = CATEGORIES.includes(normalizedCategory) ? normalizedCategory : fallbackCategory;
+        const tint = ITEM_TINTS.includes(link.tint) ? link.tint : '';
+        return {
+          id: String(link.id || generateLinkId()),
+          title: String(link.title || getTitle(link.url)),
+          url: String(link.url),
+          category,
+          tint,
+          manualTitle: Boolean(link.manualTitle),
+          ytChannelId: typeof link.ytChannelId === 'string' ? link.ytChannelId : '',
+          ytUploadsPlaylistId: typeof link.ytUploadsPlaylistId === 'string' ? link.ytUploadsPlaylistId : '',
+          ytLastPublishedAt: typeof link.ytLastPublishedAt === 'string' ? link.ytLastPublishedAt : '',
+          ytLastCheckedAt: typeof link.ytLastCheckedAt === 'string' ? link.ytLastCheckedAt : '',
+          ytSeenPublishedAt: typeof link.ytSeenPublishedAt === 'string' ? link.ytSeenPublishedAt : '',
+          ytHasUpdate: Boolean(link.ytHasUpdate)
+        };
+      });
+  }
+
+  function loadLocalState() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return;
+      const parsed = JSON.parse(raw);
+      const savedCategories = Array.isArray(parsed.categories) ? parsed.categories : [];
+      const savedLinks = Array.isArray(parsed.links) ? parsed.links : [];
+      applyState(savedCategories, savedLinks);
+    } catch (err) {
+      console.error('Failed to load local data:', err);
+    }
+  }
+
+  function saveLocalState() {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ categories: CATEGORIES, links }));
+    } catch (err) {
+      console.error('Failed to save local data:', err);
+    }
+  }
+
+  function renderCategorySelect(selectedValue) {
+    const categorySelect = document.getElementById('categorySelect');
+    const previous = selectedValue || categorySelect.value || CATEGORIES[0];
+    categorySelect.innerHTML = CATEGORIES
+      .map(category => `<option value="${category}">${category}</option>`)
+      .join('') + `<option value="${ADD_CATEGORY_OPTION}">+ Add New Category</option>`;
+    categorySelect.value = CATEGORIES.includes(previous) ? previous : CATEGORIES[0];
+  }
+
+  function removeCategoryOptionFromSelect(category) {
+    const categorySelect = document.getElementById('categorySelect');
+    if (!categorySelect) return;
+    const option = categorySelect.querySelector(`option[value="${CSS.escape(category)}"]`);
+    if (option) option.remove();
+    if (!CATEGORIES.includes(categorySelect.value)) {
+      categorySelect.value = CATEGORIES[0] || '';
+    }
+  }
+
+  function render() {
+    const sections = document.getElementById('sections');
+    sections.innerHTML = '';
+
+    CATEGORIES.forEach((category) => {
+      const section = document.createElement('section');
+      section.className = 'section';
+      section.dataset.category = category;
+      const categoryLinks = links.filter(link => link.category === category);
+
+      const header = document.createElement('div');
+      header.className = 'section-label';
+      const titleWrap = document.createElement('span');
+      titleWrap.className = 'section-title-wrap';
+      const label = document.createElement('button');
+      label.type = 'button';
+      label.className = 'category-name-btn';
+      label.title = 'Drag to reorder categories';
+      label.textContent = category;
+      label.draggable = true;
+      label.addEventListener('dragstart', (e) => onCategoryDragStart(e, category));
+      label.addEventListener('dragend', onCategoryDragEnd);
+      header.addEventListener('dragover', (e) => onCategoryDragOver(e, category));
+      header.addEventListener('dragleave', onCategoryDragLeave);
+      header.addEventListener('drop', (e) => onCategoryDrop(e, category));
+      titleWrap.appendChild(label);
+      header.appendChild(titleWrap);
+      const categoryActions = document.createElement('div');
+      categoryActions.className = 'category-actions';
+      categoryActions.innerHTML = `
+        <button type="button" class="category-actions-toggle" data-role="category-action-toggle" aria-label="Category actions">···</button>
+        <div class="category-actions-menu" data-role="category-action-menu">
+          <button type="button" class="category-action-btn" data-role="category-add-btn">Add New Category</button>
+          <button type="button" class="category-action-btn" data-role="category-rename-btn">Rename Category</button>
+          <button type="button" class="category-action-btn is-danger" data-role="category-delete-btn">Delete Category</button>
+        </div>
+      `;
+      const catToggle = categoryActions.querySelector('[data-role="category-action-toggle"]');
+      const catMenu = categoryActions.querySelector('[data-role="category-action-menu"]');
+      const catAddBtn = categoryActions.querySelector('[data-role="category-add-btn"]');
+      const catRenameBtn = categoryActions.querySelector('[data-role="category-rename-btn"]');
+      const catDeleteBtn = categoryActions.querySelector('[data-role="category-delete-btn"]');
+      if (catToggle && catMenu && catAddBtn && catRenameBtn && catDeleteBtn) {
+        catToggle.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          if (openActionMenuNode) closeActionMenu();
+          if (openCategoryMenuNode && openCategoryMenuNode !== catMenu) closeCategoryMenu();
+          const isOpen = !catMenu.classList.contains('is-open');
+          catMenu.classList.toggle('is-open', isOpen);
+          if (isOpen) positionMenuFixed(catToggle, catMenu);
+          catToggle.classList.toggle('is-open', isOpen);
+          openCategoryMenuNode = isOpen ? catMenu : null;
+        });
+        catToggle.addEventListener('mousedown', (e) => e.stopPropagation());
+        catMenu.addEventListener('click', (e) => e.stopPropagation());
+        catMenu.addEventListener('mousedown', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+        });
+        catAddBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          createUntitledCategory(category);
+          closeCategoryMenu();
+        });
+        catRenameBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          renameCategory(category);
+          closeCategoryMenu();
+        });
+        catDeleteBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          deleteCategory(category);
+          closeCategoryMenu();
+        });
+      }
+      header.appendChild(categoryActions);
+      section.appendChild(header);
+
+      const list = document.createElement('div');
+      list.className = 'list';
+
+      if (categoryLinks.length === 0) {
+        const empty = document.createElement('div');
+        empty.className = 'empty-state';
+        empty.textContent = 'Drop here to categorize';
+        list.appendChild(empty);
+      } else {
+        categoryLinks.forEach((link) => {
+          const originalIndex = links.indexOf(link);
+          const item = document.createElement('div');
+          item.className = 'list-item';
+          item.draggable = true;
+          item.dataset.index = String(originalIndex);
+          if (link.tint) {
+            item.style.setProperty('--item-bg', link.tint);
+            item.style.setProperty('--item-hover-bg', link.tint);
+          }
+          item.innerHTML = `
+            <div class="item-actions">
+              <span class="yt-update-dot${link.ytHasUpdate ? ' is-visible' : ''}" aria-hidden="true"></span>
+              <button type="button" class="item-actions-toggle" data-role="action-toggle" aria-label="More actions">···</button>
+              <div class="item-actions-menu" data-role="action-menu">
+                <div class="item-color-menu" data-role="color-menu"></div>
+                <div class="item-actions-row">
+                  <button type="button" class="category-action-btn" data-role="rename-btn">Rename</button>
+                  <button type="button" class="category-action-btn is-danger" data-role="delete-btn">Delete</button>
+                </div>
+              </div>
+            </div>
+            <img class="item-favicon" src="${getFavicon(link.url)}" onerror="this.style.display='none'" />
+            <a class="item-main" href="${link.url}" target="_blank" rel="noopener">
+              <div class="item-body">
+                <div class="item-title">${link.title || getTitle(link.url)}</div>
+              </div>
+            </a>
+          `;
+          item.addEventListener('dragstart', onItemDragStart);
+          item.addEventListener('dragend', onItemDragEnd);
+          item.addEventListener('dragover', onItemDragOver);
+          item.addEventListener('dragleave', onItemDragLeave);
+          item.addEventListener('drop', onItemDrop);
+          const titleNode = item.querySelector('.item-title');
+          if (titleNode) titleNode.title = 'Click to open';
+          const mainNode = item.querySelector('.item-main');
+          if (mainNode) {
+            mainNode.addEventListener('click', () => {
+              markYoutubeUpdateSeen(link.id);
+            });
+          }
+          initItemControls(item, originalIndex, link.tint || '');
+          list.appendChild(item);
+        });
+      }
+      section.appendChild(list);
+      section.addEventListener('dragover', onSectionDragOver);
+      section.addEventListener('dragenter', onSectionDragEnter);
+      section.addEventListener('dragleave', onSectionDragLeave);
+      section.addEventListener('drop', onSectionDrop);
+      sections.appendChild(section);
+    });
+  }
+
+  function deleteCategory(category) {
+    if (!CATEGORIES.includes(category)) return;
+
+    if (category === OTHERS_CATEGORY) {
+      const count = links.filter(link => link.category === OTHERS_CATEGORY).length;
+      const ok = window.confirm(`Deleting the other category will also delete its ${count} bookmarks. Continue?`);
+      if (!ok) return;
+      links = links.filter(link => link.category !== OTHERS_CATEGORY);
+      CATEGORIES.splice(CATEGORIES.indexOf(OTHERS_CATEGORY), 1);
+      removeCategoryOptionFromSelect(OTHERS_CATEGORY);
+      if (CATEGORIES.length === 0) CATEGORIES.push(BASE_CATEGORIES[0]);
+      saveLocalState();
+      renderCategorySelect();
+      render();
+      return;
+    }
+
+    if (!CATEGORIES.includes(OTHERS_CATEGORY)) CATEGORIES.push(OTHERS_CATEGORY);
+    links = links.map((link) => {
+      if (link.category !== category) return link;
+      return { ...link, category: OTHERS_CATEGORY };
+    });
+    CATEGORIES.splice(CATEGORIES.indexOf(category), 1);
+    removeCategoryOptionFromSelect(category);
+
+    saveLocalState();
+    renderCategorySelect(OTHERS_CATEGORY);
+    render();
+  }
+
+  function renameCategory(oldName) {
+    if (!CATEGORIES.includes(oldName)) return;
+    if (oldName === OTHERS_CATEGORY) {
+      window.alert('other is a system category and cannot be renamed.');
+      return;
+    }
+
+    const next = window.prompt('Rename category:', oldName);
+    if (next === null) return;
+    const newName = next.trim();
+    if (!newName || newName === oldName) return;
+    if (CATEGORIES.includes(newName)) {
+      window.alert('That category name already exists. Choose another name.');
+      return;
+    }
+
+    const idx = CATEGORIES.indexOf(oldName);
+    if (idx < 0) return;
+    CATEGORIES[idx] = newName;
+    links = links.map((link) => {
+      if (link.category !== oldName) return link;
+      return { ...link, category: newName };
+    });
+
+    saveLocalState();
+    renderCategorySelect(newName);
+    render();
+  }
+
+  function createUntitledCategory(afterCategory) {
+    let name = 'Untitled';
+    let index = 2;
+    while (CATEGORIES.includes(name)) {
+      name = `Untitled ${index}`;
+      index += 1;
+    }
+
+    const insertAfterIndex = CATEGORIES.indexOf(afterCategory);
+    if (insertAfterIndex >= 0) {
+      CATEGORIES.splice(insertAfterIndex + 1, 0, name);
+    } else {
+      CATEGORIES.push(name);
+    }
+
+    saveLocalState();
+    renderCategorySelect(name);
+    render();
+  }
+
+  // ── Category drag-to-reorder ──────────────────────────────────────────────
+  let draggedCategory = null;
+
+  function onCategoryDragStart(e, category) {
+    draggedCategory = category;
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/category', category);
+    const section = e.currentTarget.closest('.section');
+    if (section) section.classList.add('cat-dragging');
+  }
+
+  function onCategoryDragEnd(e) {
+    draggedCategory = null;
+    document.querySelectorAll('.section.cat-dragging').forEach(el => el.classList.remove('cat-dragging'));
+    document.querySelectorAll('.section-label.cat-drag-over-left, .section-label.cat-drag-over-right').forEach(el => {
+      el.classList.remove('cat-drag-over-left', 'cat-drag-over-right');
+    });
+  }
+
+  function onCategoryDragOver(e, category) {
+    if (!draggedCategory || draggedCategory === category) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    const header = e.currentTarget;
+    const rect = header.getBoundingClientRect();
+    const isLeft = e.clientX < rect.left + rect.width / 2;
+    header.classList.toggle('cat-drag-over-left', isLeft);
+    header.classList.toggle('cat-drag-over-right', !isLeft);
+  }
+
+  function onCategoryDragLeave(e) {
+    e.currentTarget.classList.remove('cat-drag-over-left', 'cat-drag-over-right');
+  }
+
+  function onCategoryDrop(e, targetCategory) {
+    e.preventDefault();
+    e.stopPropagation();
+    const header = e.currentTarget;
+    const isLeft = header.classList.contains('cat-drag-over-left');
+    header.classList.remove('cat-drag-over-left', 'cat-drag-over-right');
+
+    const src = draggedCategory;
+    draggedCategory = null;
+    if (!src || src === targetCategory) return;
+
+    const srcIdx = CATEGORIES.indexOf(src);
+    let tgtIdx = CATEGORIES.indexOf(targetCategory);
+    if (srcIdx < 0 || tgtIdx < 0) return;
+
+    CATEGORIES.splice(srcIdx, 1);
+    tgtIdx = CATEGORIES.indexOf(targetCategory);
+    const insertAt = isLeft ? tgtIdx : tgtIdx + 1;
+    CATEGORIES.splice(insertAt, 0, src);
+
+    saveLocalState();
+    renderCategorySelect(src);
+    render();
+  }
+
+  function onItemDragStart(e) {
+    if (e.target && e.target.closest && e.target.closest('.item-actions')) {
+      e.preventDefault();
+      return;
+    }
+    draggedIndex = Number(e.currentTarget.dataset.index);
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', String(draggedIndex));
+  }
+
+  function onItemDragEnd() {
+    draggedIndex = null;
+    document.querySelectorAll('.section.drop-target').forEach(node => {
+      node.classList.remove('drop-target');
+    });
+    clearItemDropMarkers();
+  }
+
+  function resetMenuPosition(menuEl) {
+    menuEl.classList.remove('is-flipped');
+    menuEl.style.position = '';
+    menuEl.style.left = '';
+    menuEl.style.top = '';
+    menuEl.style.bottom = '';
+    menuEl.style.right = '';
+  }
+
+  function positionMenuFixed(toggleEl, menuEl) {
+    const r = toggleEl.getBoundingClientRect();
+    const prevDisplay = menuEl.style.display;
+    const prevVisibility = menuEl.style.visibility;
+    const prevPointerEvents = menuEl.style.pointerEvents;
+
+    menuEl.classList.remove('is-flipped');
+    menuEl.style.display = 'flex';
+    menuEl.style.visibility = 'hidden';
+    menuEl.style.pointerEvents = 'none';
+    const mw = menuEl.offsetWidth || 130;
+    const mh = menuEl.offsetHeight || 80;
+
+    const openUp = r.bottom + mh + 8 > window.innerHeight;
+    const openLeft = r.right - mw < 4;
+    menuEl.classList.toggle('is-flipped', openUp);
+    if (openLeft) {
+      menuEl.style.left = '0';
+      menuEl.style.right = 'auto';
+    } else {
+      menuEl.style.left = '';
+      menuEl.style.right = '';
+    }
+
+    menuEl.style.display = prevDisplay;
+    menuEl.style.visibility = prevVisibility;
+    menuEl.style.pointerEvents = prevPointerEvents;
+  }
+
+  function closeActionMenu() {
+    if (!openActionMenuNode) return;
+    openActionMenuNode.classList.remove('is-open');
+    resetMenuPosition(openActionMenuNode);
+    const toggle = openActionMenuNode.parentElement?.querySelector('[data-role="action-toggle"]');
+    if (toggle) toggle.classList.remove('is-open');
+    openActionMenuNode = null;
+  }
+
+  function closeCategoryMenu() {
+    if (!openCategoryMenuNode) return;
+    openCategoryMenuNode.classList.remove('is-open');
+    resetMenuPosition(openCategoryMenuNode);
+    const toggle = openCategoryMenuNode.parentElement?.querySelector('[data-role="category-action-toggle"]');
+    if (toggle) toggle.classList.remove('is-open');
+    openCategoryMenuNode = null;
+  }
+
+  function repositionOpenMenus() {
+    if (openActionMenuNode) {
+      const toggle = openActionMenuNode.parentElement?.querySelector('[data-role="action-toggle"]');
+      if (toggle) positionMenuFixed(toggle, openActionMenuNode);
+    }
+    if (openCategoryMenuNode) {
+      const toggle = openCategoryMenuNode.parentElement?.querySelector('[data-role="category-action-toggle"]');
+      if (toggle) positionMenuFixed(toggle, openCategoryMenuNode);
+    }
+  }
+
+  function toDarkerHexColor(hex, amount = 28) {
+    const safe = String(hex || '').trim();
+    const m = safe.match(/^#([0-9a-fA-F]{6})$/);
+    if (!m) return '#bdbdbd';
+    const value = m[1];
+    const r = Math.max(0, parseInt(value.slice(0, 2), 16) - amount);
+    const g = Math.max(0, parseInt(value.slice(2, 4), 16) - amount);
+    const b = Math.max(0, parseInt(value.slice(4, 6), 16) - amount);
+    return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+  }
+
+  function initItemControls(itemNode, linkIndex, currentTint) {
+    const actions = itemNode.querySelector('.item-actions');
+    const toggle = itemNode.querySelector('[data-role="action-toggle"]');
+    const actionMenu = itemNode.querySelector('[data-role="action-menu"]');
+    const menu = itemNode.querySelector('[data-role="color-menu"]');
+    const renameBtn = itemNode.querySelector('[data-role="rename-btn"]');
+    const deleteBtn = itemNode.querySelector('[data-role="delete-btn"]');
+    if (!toggle || !menu || !actions || !actionMenu || !renameBtn || !deleteBtn) return;
+
+    const displayTint = currentTint || ITEM_TINTS[0];
+    toggle.style.setProperty('--actions-dot-color', toDarkerHexColor(displayTint, 22));
+
+    menu.innerHTML = ITEM_TINTS.map((tint) => {
+      const activeClass = tint === currentTint ? 'is-active' : '';
+      return `<button type="button" class="item-color-option ${activeClass}" data-tint="${tint}" style="background:${tint}" aria-label="Choose color"></button>`;
+    }).join('');
+
+    toggle.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (openCategoryMenuNode) closeCategoryMenu();
+      if (openActionMenuNode && openActionMenuNode !== actionMenu) closeActionMenu();
+      const isOpen = !actionMenu.classList.contains('is-open');
+      actionMenu.classList.toggle('is-open', isOpen);
+      if (isOpen) positionMenuFixed(toggle, actionMenu);
+      toggle.classList.toggle('is-open', isOpen);
+      openActionMenuNode = isOpen ? actionMenu : null;
+    });
+
+    toggle.addEventListener('mousedown', (e) => e.stopPropagation());
+
+    actionMenu.addEventListener('click', (e) => e.stopPropagation());
+    actionMenu.addEventListener('mousedown', (e) => e.stopPropagation());
+    actions.addEventListener('dragstart', (e) => e.stopPropagation());
+
+    renameBtn.addEventListener('mousedown', (e) => e.stopPropagation());
+    renameBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      renameItemTitle(linkIndex);
+      closeActionMenu();
+    });
+
+    menu.querySelectorAll('.item-color-option').forEach((btn) => {
+      btn.addEventListener('mousedown', (e) => e.stopPropagation());
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const tint = btn.dataset.tint;
+        setItemTint(linkIndex, tint);
+        closeActionMenu();
+      });
+    });
+
+    deleteBtn.addEventListener('mousedown', (e) => e.stopPropagation());
+    deleteBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      removeItem(linkIndex);
+      closeActionMenu();
+    });
+  }
+
+  function setItemTint(index, tint) {
+    if (!Number.isInteger(index) || index < 0 || index >= links.length) return;
+    if (!ITEM_TINTS.includes(tint)) return;
+    links[index] = { ...links[index], tint };
+    saveLocalState();
+    render();
+  }
+
+  function renameItemTitle(index) {
+    if (!Number.isInteger(index) || index < 0 || index >= links.length) return;
+    const current = links[index];
+    const initial = current.title || getTitle(current.url);
+    const next = window.prompt('Rename bookmark:', initial);
+    if (next === null) return;
+    const trimmed = next.trim();
+    if (!trimmed || trimmed === initial) return;
+    links[index] = { ...current, title: trimmed, manualTitle: true };
+    saveLocalState();
+    render();
+  }
+
+  function clearItemDropMarkers() {
+    document.querySelectorAll('.list-item.drop-before, .list-item.drop-after').forEach(node => {
+      node.classList.remove('drop-before', 'drop-after');
+    });
+  }
+
+  function onItemDragOver(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    const item = e.currentTarget;
+    const rect = item.getBoundingClientRect();
+    const placeAfter = e.clientY >= rect.top + rect.height / 2;
+    clearItemDropMarkers();
+    item.classList.add(placeAfter ? 'drop-after' : 'drop-before');
+    e.dataTransfer.dropEffect = 'move';
+  }
+
+  function onItemDragLeave(e) {
+    const related = e.relatedTarget;
+    if (!related || !e.currentTarget.contains(related)) {
+      e.currentTarget.classList.remove('drop-before', 'drop-after');
+    }
+  }
+
+  function onItemDrop(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    const targetItem = e.currentTarget;
+    const targetIndex = Number(targetItem.dataset.index);
+    const section = targetItem.closest('.section');
+    const targetCategory = section ? section.dataset.category : null;
+    if (!targetCategory || !Number.isInteger(targetIndex)) return;
+    const dropped = Number(e.dataTransfer.getData('text/plain'));
+    const sourceIndex = Number.isInteger(dropped) ? dropped : draggedIndex;
+    if (!Number.isInteger(sourceIndex) || sourceIndex < 0 || sourceIndex >= links.length) return;
+
+    const placeAfter = targetItem.classList.contains('drop-after');
+    clearItemDropMarkers();
+    moveItem(sourceIndex, targetCategory, targetIndex, placeAfter);
+  }
+
+  function onSectionDragOver(e) {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  }
+
+  function onSectionDragEnter(e) {
+    e.preventDefault();
+    e.currentTarget.classList.add('drop-target');
+  }
+
+  function onSectionDragLeave(e) {
+    const related = e.relatedTarget;
+    if (!related || !e.currentTarget.contains(related)) {
+      e.currentTarget.classList.remove('drop-target');
+    }
+  }
+
+  function onSectionDrop(e) {
+    e.preventDefault();
+    if (e.target.closest('.list-item')) return;
+    const targetCategory = e.currentTarget.dataset.category;
+    e.currentTarget.classList.remove('drop-target');
+    clearItemDropMarkers();
+    const dropped = Number(e.dataTransfer.getData('text/plain'));
+    const index = Number.isInteger(dropped) ? dropped : draggedIndex;
+    if (!Number.isInteger(index) || index < 0 || index >= links.length) return;
+    moveItem(index, targetCategory);
+  }
+
+  function getInsertAtEnd(category) {
+    let lastIndex = -1;
+    links.forEach((link, i) => {
+      if (link.category === category) lastIndex = i;
+    });
+    return lastIndex + 1;
+  }
+
+  function moveItem(sourceIndex, targetCategory, targetIndex = null, placeAfter = false) {
+    const source = links[sourceIndex];
+    if (!source) return;
+    if (sourceIndex === targetIndex && source.category === targetCategory) return;
+
+    const updated = { ...source, category: targetCategory };
+    links.splice(sourceIndex, 1);
+
+    let insertAt;
+    if (!Number.isInteger(targetIndex)) {
+      insertAt = getInsertAtEnd(targetCategory);
+    } else {
+      let adjustedTarget = targetIndex;
+      if (sourceIndex < targetIndex) adjustedTarget -= 1;
+      insertAt = placeAfter ? adjustedTarget + 1 : adjustedTarget;
+    }
+
+    if (insertAt < 0) insertAt = 0;
+    if (insertAt > links.length) insertAt = links.length;
+
+    links.splice(insertAt, 0, updated);
+    draggedIndex = null;
+    saveLocalState();
+    render();
+  }
+
+  function isValidUrl(str) {
+    try {
+      const url = new URL(str);
+      return url.protocol === 'http:' || url.protocol === 'https:' || url.protocol === 'file:';
+    } catch { return false; }
+  }
+
+  function normalizeInputUrl(raw) {
+    const val = String(raw || '').trim();
+    if (!val) return '';
+
+    if (/^https?:\/\//i.test(val) || /^file:\/\//i.test(val)) {
+      return val;
+    }
+
+    // macOS / Linux absolute path -> file://
+    if (val.startsWith('/')) {
+      return encodeURI(`file://${val}`);
+    }
+
+    // Windows absolute path (e.g. C:\path\to\index.html) -> file:///
+    if (/^[a-zA-Z]:[\\/]/.test(val)) {
+      return encodeURI(`file:///${val.replace(/\\/g, '/')}`);
+    }
+
+    return `https://${val}`;
+  }
+
+  function isYoutubeChannelUrl(rawUrl) {
+    try {
+      const parsed = new URL(rawUrl);
+      const host = parsed.hostname.toLowerCase();
+      if (!host.includes('youtube.com')) return false;
+      return /^\/(@[^/]+|channel\/[^/]+|c\/[^/]+|user\/[^/]+)/.test(parsed.pathname);
+    } catch {
+      return false;
+    }
+  }
+
+  function getYoutubeHandle(rawUrl) {
+    try {
+      const parsed = new URL(rawUrl);
+      const match = parsed.pathname.match(/^\/@([^/?#]+)/);
+      if (!match) return '';
+      return `@${match[1]}`;
+    } catch {
+      return '';
+    }
+  }
+
+  function getYoutubeCacheKey(rawUrl) {
+    try {
+      const parsed = new URL(rawUrl);
+      const host = parsed.hostname.toLowerCase().replace(/^www\./, '');
+      const path = parsed.pathname.replace(/\/+$/, '');
+      return `${host}${path}`;
+    } catch {
+      return rawUrl;
+    }
+  }
+
+  function isYoutubeHost(hostname) {
+    const host = String(hostname || '').toLowerCase();
+    return host === 'youtube.com' || host === 'www.youtube.com' || host === 'm.youtube.com';
+  }
+
+  function extractYoutubeChannelRef(rawUrl) {
+    try {
+      const parsed = new URL(rawUrl);
+      if (!isYoutubeHost(parsed.hostname)) return null;
+      const path = parsed.pathname.replace(/\/+$/, '');
+      let match = path.match(/^\/channel\/([^/?#]+)/i);
+      if (match) return { type: 'id', value: match[1] };
+      match = path.match(/^\/@([^/?#]+)/i);
+      if (match) return { type: 'handle', value: `@${match[1]}` };
+      match = path.match(/^\/user\/([^/?#]+)/i);
+      if (match) return { type: 'username', value: match[1] };
+      match = path.match(/^\/c\/([^/?#]+)/i);
+      if (match) return { type: 'custom', value: match[1] };
+      return null;
+    } catch {
+      return null;
+    }
+  }
+
+  async function fetchJsonWithTimeout(url, timeoutMs = 8000) {
+    const resp = await fetchWithTimeout(url, timeoutMs);
+    if (!resp.ok) {
+      throw new Error(`HTTP ${resp.status}`);
+    }
+    return resp.json();
+  }
+
+  async function fetchYoutubeChannelMetaById(channelId, apiKey) {
+    const url = `https://www.googleapis.com/youtube/v3/channels?part=id,snippet,contentDetails&id=${encodeURIComponent(channelId)}&key=${encodeURIComponent(apiKey)}`;
+    const data = await fetchJsonWithTimeout(url);
+    const item = Array.isArray(data.items) ? data.items[0] : null;
+    if (!item) return null;
+    return {
+      channelId: item.id || '',
+      uploadsPlaylistId: item.contentDetails?.relatedPlaylists?.uploads || '',
+      title: item.snippet?.title || ''
+    };
+  }
+
+  function pickYoutubeSearchChannel(items, refValue) {
+    const normalizedRef = String(refValue || '').trim().toLowerCase().replace(/^@/, '');
+    if (!Array.isArray(items) || !items.length) return null;
+    return items.find((item) => {
+      const title = String(item?.snippet?.title || '').trim().toLowerCase();
+      const channelTitle = String(item?.snippet?.channelTitle || '').trim().toLowerCase();
+      return title === normalizedRef || channelTitle === normalizedRef || title.includes(normalizedRef) || channelTitle.includes(normalizedRef);
+    }) || items[0];
+  }
+
+  async function resolveYoutubeChannelMeta(rawUrl, apiKey) {
+    const ref = extractYoutubeChannelRef(rawUrl);
+    if (!ref || !apiKey) return null;
+
+    if (ref.type === 'id') {
+      return fetchYoutubeChannelMetaById(ref.value, apiKey);
+    }
+
+    if (ref.type === 'handle') {
+      const url = `https://www.googleapis.com/youtube/v3/channels?part=id,snippet,contentDetails&forHandle=${encodeURIComponent(ref.value)}&key=${encodeURIComponent(apiKey)}`;
+      const data = await fetchJsonWithTimeout(url);
+      const item = Array.isArray(data.items) ? data.items[0] : null;
+      if (!item) return null;
+      return {
+        channelId: item.id || '',
+        uploadsPlaylistId: item.contentDetails?.relatedPlaylists?.uploads || '',
+        title: item.snippet?.title || ''
+      };
+    }
+
+    if (ref.type === 'username') {
+      const url = `https://www.googleapis.com/youtube/v3/channels?part=id,snippet,contentDetails&forUsername=${encodeURIComponent(ref.value)}&key=${encodeURIComponent(apiKey)}`;
+      const data = await fetchJsonWithTimeout(url);
+      const item = Array.isArray(data.items) ? data.items[0] : null;
+      if (!item) return null;
+      return {
+        channelId: item.id || '',
+        uploadsPlaylistId: item.contentDetails?.relatedPlaylists?.uploads || '',
+        title: item.snippet?.title || ''
+      };
+    }
+
+    if (ref.type === 'custom') {
+      const searchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&type=channel&maxResults=5&q=${encodeURIComponent(ref.value)}&key=${encodeURIComponent(apiKey)}`;
+      const searchData = await fetchJsonWithTimeout(searchUrl);
+      const picked = pickYoutubeSearchChannel(searchData.items, ref.value);
+      const channelId = picked?.id?.channelId || '';
+      if (!channelId) return null;
+      const meta = await fetchYoutubeChannelMetaById(channelId, apiKey);
+      return meta || {
+        channelId,
+        uploadsPlaylistId: '',
+        title: picked?.snippet?.title || picked?.snippet?.channelTitle || ''
+      };
+    }
+
+    return null;
+  }
+
+  async function fetchLatestYoutubeUpload(meta, apiKey) {
+    let uploadsPlaylistId = meta?.uploadsPlaylistId || '';
+    if (!uploadsPlaylistId && meta?.channelId) {
+      const refreshedMeta = await fetchYoutubeChannelMetaById(meta.channelId, apiKey);
+      uploadsPlaylistId = refreshedMeta?.uploadsPlaylistId || '';
+    }
+    if (!uploadsPlaylistId) return null;
+
+    const url = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId=${encodeURIComponent(uploadsPlaylistId)}&maxResults=1&key=${encodeURIComponent(apiKey)}`;
+    const data = await fetchJsonWithTimeout(url);
+    const item = Array.isArray(data.items) ? data.items[0] : null;
+    const publishedAt = item?.snippet?.publishedAt || '';
+    if (!publishedAt) return null;
+    return { publishedAt, uploadsPlaylistId };
+  }
+
+  function isYoutubeUpdateCheckEnabled() {
+    return Number(currentSettings.youtubeCheckDays || 0) > 0 && Boolean(String(currentSettings.youtubeApiKey || '').trim());
+  }
+
+  function shouldCheckYoutubeLink(link, options = {}) {
+    const { force = false, targetLinkId = '' } = options;
+    if (!link || !link.id || !isYoutubeChannelUrl(link.url)) return false;
+    if (targetLinkId && link.id !== targetLinkId) return false;
+    if (!force && !isYoutubeUpdateCheckEnabled()) return false;
+    if (force) return true;
+    const intervalMs = Number(currentSettings.youtubePollMinutes || 60) * 60 * 1000;
+    if (!intervalMs) return false;
+    const lastCheckedAt = Date.parse(link.ytLastCheckedAt || '');
+    if (!Number.isFinite(lastCheckedAt)) return true;
+    return Date.now() - lastCheckedAt >= intervalMs;
+  }
+
+  function markYoutubeUpdateSeen(linkId) {
+    const updated = updateLinkById(linkId, (link) => {
+      if (!link.ytHasUpdate) return link;
+      return {
+        ...link,
+        ytSeenPublishedAt: link.ytLastPublishedAt || link.ytSeenPublishedAt || '',
+        ytHasUpdate: false
+      };
+    });
+    if (!updated) return;
+    saveLocalState();
+    render();
+  }
+
+  async function checkYoutubeLinkForUpdates(linkId, options = {}) {
+    const { commit = true } = options;
+    const apiKey = String(currentSettings.youtubeApiKey || '').trim();
+    const index = findLinkIndexById(linkId);
+    if (index < 0 || !apiKey) return;
+    const link = links[index];
+    if (!isYoutubeChannelUrl(link.url)) return;
+
+    const attemptedAt = new Date().toISOString();
+
+    try {
+      let channelMeta = null;
+      if (link.ytChannelId) {
+        channelMeta = {
+          channelId: link.ytChannelId,
+          uploadsPlaylistId: link.ytUploadsPlaylistId || '',
+          title: link.title || ''
+        };
+      } else {
+        channelMeta = await resolveYoutubeChannelMeta(link.url, apiKey);
+      }
+
+      if (!channelMeta || !channelMeta.channelId) {
+        updateLinkById(linkId, (current) => current ? { ...current, ytLastCheckedAt: attemptedAt } : current);
+        if (commit) saveLocalState();
+        return;
+      }
+
+      const latest = await fetchLatestYoutubeUpload(channelMeta, apiKey);
+      updateLinkById(linkId, (current) => {
+        if (!current) return current;
+        const latestPublishedAt = latest?.publishedAt || current.ytLastPublishedAt || '';
+        const latestPublishedTs = Date.parse(latestPublishedAt);
+        const seenPublishedTs = Date.parse(current.ytSeenPublishedAt || '');
+        const windowDays = Number(currentSettings.youtubeCheckDays || 0);
+        const recentThreshold = Date.now() - windowDays * 24 * 60 * 60 * 1000;
+        const isRecent = Number.isFinite(latestPublishedTs) && latestPublishedTs >= recentThreshold;
+        const isUnseen = !Number.isFinite(seenPublishedTs) || (Number.isFinite(latestPublishedTs) && latestPublishedTs > seenPublishedTs);
+        const next = {
+          ...current,
+          ytChannelId: channelMeta.channelId,
+          ytUploadsPlaylistId: latest?.uploadsPlaylistId || channelMeta.uploadsPlaylistId || current.ytUploadsPlaylistId || '',
+          ytLastCheckedAt: attemptedAt,
+          ytLastPublishedAt: latestPublishedAt
+        };
+        next.ytHasUpdate = Boolean(latestPublishedAt && isRecent && isUnseen);
+        return next;
+      });
+      if (commit) {
+        saveLocalState();
+        render();
+      }
+    } catch (err) {
+      console.error('YouTube update check failed:', err);
+      updateLinkById(linkId, (current) => current ? { ...current, ytLastCheckedAt: attemptedAt } : current);
+      if (commit) saveLocalState();
+    }
+  }
+
+  async function maybeCheckYoutubeUpdates(options = {}) {
+    if (!options.force && !isYoutubeUpdateCheckEnabled()) return;
+    const queue = links.filter((link) => shouldCheckYoutubeLink(link, options));
+    if (!queue.length) return;
+    for (const link of queue) {
+      await checkYoutubeLinkForUpdates(link.id, { commit: false });
+    }
+    saveLocalState();
+    render();
+  }
+
+  function scheduleYoutubeUpdateChecks() {
+    if (youtubeUpdateTimer) {
+      clearInterval(youtubeUpdateTimer);
+      youtubeUpdateTimer = null;
+    }
+    if (!isYoutubeUpdateCheckEnabled()) return;
+    void maybeCheckYoutubeUpdates();
+    const intervalMs = Number(currentSettings.youtubePollMinutes || 60) * 60 * 1000;
+    youtubeUpdateTimer = window.setInterval(() => {
+      void maybeCheckYoutubeUpdates();
+    }, intervalMs);
+  }
+
+  function loadYoutubeTitleCache() {
+    try {
+      const raw = localStorage.getItem(YT_TITLE_CACHE_KEY);
+      if (!raw) return {};
+      const parsed = JSON.parse(raw);
+      return parsed && typeof parsed === 'object' ? parsed : {};
+    } catch {
+      return {};
+    }
+  }
+
+  function saveYoutubeTitleCache(cache) {
+    try {
+      localStorage.setItem(YT_TITLE_CACHE_KEY, JSON.stringify(cache));
+    } catch {}
+  }
+
+  function extractYoutubeTitleFromProxyText(text) {
+    if (!text) return '';
+    const titleLine = text.match(/^Title:\s*(.+)$/m);
+    let title = titleLine ? titleLine[1].trim() : '';
+    if (!title) {
+      const mdTitle = text.match(/^([^\n]+?)\s*-\s*YouTube$/m);
+      title = mdTitle ? mdTitle[1].trim() : '';
+    }
+    if (!title) return '';
+    return title.replace(/\s+-\s+YouTube$/i, '').trim();
+  }
+
+  async function fetchWithTimeout(url, timeoutMs = 4500) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+      return await fetch(url, { signal: controller.signal });
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
+  async function fetchYoutubeChannelTitle(rawUrl) {
+    try {
+      const clean = rawUrl.replace(/^https?:\/\//, '');
+      const attempts = [
+        `https://r.jina.ai/http://${clean}`,
+        `https://r.jina.ai/http://www.youtube.com${new URL(rawUrl).pathname}`,
+      ];
+
+      for (const proxyUrl of attempts) {
+        try {
+          const resp = await fetchWithTimeout(proxyUrl, 5000);
+          if (!resp.ok) continue;
+          // Decode explicitly as UTF-8.
+          const buffer = await resp.arrayBuffer();
+          const text = new TextDecoder('utf-8').decode(buffer);
+          const title = extractYoutubeTitleFromProxyText(text);
+          if (title) return title;
+        } catch {
+          // Try next source.
+        }
+      }
+      return '';
+    } catch {
+      return '';
+    }
+  }
+
+  async function resolveLinkTitle(rawUrl) {
+    if (!isYoutubeChannelUrl(rawUrl)) return getTitle(rawUrl);
+
+    const cacheKey = getYoutubeCacheKey(rawUrl);
+    const cache = loadYoutubeTitleCache();
+    if (cache[cacheKey]) return cache[cacheKey];
+
+    const channelTitle = await fetchYoutubeChannelTitle(rawUrl);
+    if (channelTitle) {
+      cache[cacheKey] = channelTitle;
+      saveYoutubeTitleCache(cache);
+      return channelTitle;
+    }
+
+    const handle = getYoutubeHandle(rawUrl);
+    if (handle) return handle;
+    return getTitle(rawUrl);
+  }
+
+  async function addUrl(forcedCategory) {
+    const input = document.getElementById('urlInput');
+    const errorMsg = document.getElementById('errorMsg');
+    const categorySelect = document.getElementById('categorySelect');
+    const val = normalizeInputUrl(input.value);
+    if (!isValidUrl(val)) {
+      errorMsg.style.display = 'block';
+      input.focus();
+      return;
+    }
+
+    errorMsg.style.display = 'none';
+    const selected = forcedCategory || categorySelect.value;
+    const targetCategory = CATEGORIES.includes(selected) ? selected : CATEGORIES[0];
+
+    const fallbackTitle = getTitle(val);
+    const newLinkId = generateLinkId();
+    const newLink = {
+      id: newLinkId,
+      title: fallbackTitle,
+      url: val,
+      category: targetCategory,
+      manualTitle: false,
+      ytChannelId: '',
+      ytUploadsPlaylistId: '',
+      ytLastPublishedAt: '',
+      ytLastCheckedAt: '',
+      ytSeenPublishedAt: '',
+      ytHasUpdate: false
+    };
+    links.push(newLink);
+    input.value = '';
+    saveLocalState();
+    render();
+
+    // Resolve title asynchronously so the item appears immediately.
+    try {
+      const resolvedTitle = await resolveLinkTitle(val);
+      const updated = updateLinkById(newLinkId, (current) => {
+        if (!current || current.manualTitle || !resolvedTitle || resolvedTitle === current.title) return current;
+        return { ...current, title: resolvedTitle };
+      });
+      if (updated) {
+        saveLocalState();
+        render();
+      }
+    } catch {}
+
+    if (isYoutubeChannelUrl(val) && isYoutubeUpdateCheckEnabled()) {
+      void maybeCheckYoutubeUpdates({ force: true, targetLinkId: newLinkId });
+    }
+  }
+
+  function searchGoogle() {
+    const input = document.getElementById('urlInput');
+    const query = String(input?.value || '').trim();
+    if (!query) {
+      input?.focus();
+      return;
+    }
+    const url = buildSearchUrl(query);
+    window.open(url, '_blank', 'noopener');
+  }
+
+  function toggleCategoryForm(force) {
+    const form = document.getElementById('newCategoryForm');
+    const input = document.getElementById('newCategoryInput');
+    const open = typeof force === 'boolean' ? force : form.style.display !== 'flex';
+    form.style.display = open ? 'flex' : 'none';
+    if (open) {
+      categoryFormOpenedAt = Date.now();
+      input.value = '';
+      input.focus();
+    } else {
+      categoryFormOpenedAt = 0;
+    }
+  }
+
+  function hideEmptyCategoryForm() {
+    const form = document.getElementById('newCategoryForm');
+    const input = document.getElementById('newCategoryInput');
+    if (!form || !input) return;
+    if (form.style.display !== 'flex') return;
+    if (Date.now() - categoryFormOpenedAt < 250) return;
+    if (input.value.trim()) return;
+    toggleCategoryForm(false);
+  }
+
+  function addCategory() {
+    const input = document.getElementById('newCategoryInput');
+    const name = input.value.trim();
+    if (!name) return;
+
+    if (!CATEGORIES.includes(name)) {
+      CATEGORIES.push(name);
+      render();
+      saveLocalState();
+    }
+
+    renderCategorySelect(name);
+    toggleCategoryForm(false);
+  }
+
+  function removeItem(i) {
+    links.splice(i, 1);
+    saveLocalState();
+    render();
+  }
+
+  document.getElementById('urlInput').addEventListener('keydown', e => {
+    if (e.key !== 'Enter') return;
+    if (currentSettings.defaultPrimaryAction === 'search') {
+      searchGoogle();
+      return;
+    }
+    void addUrl();
+  });
+
+  document.getElementById('categorySelect').addEventListener('change', (e) => {
+    const select = e.currentTarget;
+    if (select.value !== ADD_CATEGORY_OPTION) return;
+    const fallback = CATEGORIES[0] || '';
+    select.value = fallback;
+    toggleCategoryForm(true);
+  });
+
+  document.getElementById('newCategoryInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') addCategory();
+    if (e.key === 'Escape') toggleCategoryForm(false);
+  });
+
+  document.getElementById('newCategoryInput').addEventListener('blur', () => {
+    setTimeout(hideEmptyCategoryForm, 120);
+  });
+
+  document.addEventListener('click', (e) => {
+    const form = document.getElementById('newCategoryForm');
+    if (form && !form.contains(e.target)) hideEmptyCategoryForm();
+    closeActionMenu();
+    closeCategoryMenu();
+  });
+  window.addEventListener('resize', repositionOpenMenus);
+  window.addEventListener('scroll', repositionOpenMenus, true);
+
+  // ── Page settings ─────────────────────────────────────────────────────────
+  const SETTINGS_KEY = 'bookmark_settings_v1';
+
+  const THEMES = [
+    {
+      id: 'default', name: 'Soft Light',
+      bg: '#f0f2f7',
+      swatch: 'linear-gradient(135deg, #c8d8f8 0%, #f5e0f8 50%, #d5f0e8 100%)',
+      blobs: [
+        'radial-gradient(circle, #c8d8f8 0%, #dce8ff 60%, transparent 100%)',
+        'radial-gradient(circle, #f5e0f8 0%, #eddff5 60%, transparent 100%)',
+        'radial-gradient(circle, #d5f0e8 0%, #dff5ec 60%, transparent 100%)',
+        'radial-gradient(circle, #fde8d4 0%, #fceee2 60%, transparent 100%)',
+      ]
+    },
+    {
+      id: 'sunset', name: 'Warm Sun',
+      bg: '#f5efea',
+      swatch: 'linear-gradient(135deg, #ffd4b0 0%, #ffb8c6 50%, #ffd89b 100%)',
+      blobs: [
+        'radial-gradient(circle, #ffd4b0 0%, #ffe8cc 60%, transparent 100%)',
+        'radial-gradient(circle, #ffb8c6 0%, #ffd0d8 60%, transparent 100%)',
+        'radial-gradient(circle, #ffd89b 0%, #ffebb8 60%, transparent 100%)',
+        'radial-gradient(circle, #f8c8d4 0%, #fcdde6 60%, transparent 100%)',
+      ]
+    },
+    {
+      id: 'ocean', name: 'Sea Breeze',
+      bg: '#eaf2f5',
+      swatch: 'linear-gradient(135deg, #a8d8ea 0%, #b8e8d8 50%, #c8d0f8 100%)',
+      blobs: [
+        'radial-gradient(circle, #a8d8ea 0%, #c0e8f5 60%, transparent 100%)',
+        'radial-gradient(circle, #b8e8d8 0%, #d0f0e8 60%, transparent 100%)',
+        'radial-gradient(circle, #c8d0f8 0%, #d8e0ff 60%, transparent 100%)',
+        'radial-gradient(circle, #a0e8e0 0%, #c0f0ec 60%, transparent 100%)',
+      ]
+    },
+    {
+      id: 'forest', name: 'Forest',
+      bg: '#edf2ec',
+      swatch: 'linear-gradient(135deg, #b8d8a8 0%, #c8e8b0 50%, #e4d8b0 100%)',
+      blobs: [
+        'radial-gradient(circle, #b8d8a8 0%, #d0e8c0 60%, transparent 100%)',
+        'radial-gradient(circle, #c8e0b0 0%, #d8ecc0 60%, transparent 100%)',
+        'radial-gradient(circle, #e4d8b0 0%, #f0e8c8 60%, transparent 100%)',
+        'radial-gradient(circle, #c0d8b0 0%, #d8eccc 60%, transparent 100%)',
+      ]
+    },
+    {
+      id: 'dusk', name: 'Dusk',
+      bg: '#f0edf5',
+      swatch: 'linear-gradient(135deg, #c4b0e8 0%, #e8b0c8 50%, #b0c4e8 100%)',
+      blobs: [
+        'radial-gradient(circle, #c4b0e8 0%, #d8c8f8 60%, transparent 100%)',
+        'radial-gradient(circle, #e8b0c8 0%, #f8c8d8 60%, transparent 100%)',
+        'radial-gradient(circle, #b0c4e8 0%, #c8d8f8 60%, transparent 100%)',
+        'radial-gradient(circle, #d4b8e0 0%, #e8d0f0 60%, transparent 100%)',
+      ]
+    },
+    {
+      id: 'minimal', name: 'Minimal',
+      bg: '#f8f8f8',
+      swatch: 'linear-gradient(135deg, #ebebeb 0%, #f5f5f5 50%, #e8e8e8 100%)',
+      blobs: [
+        'radial-gradient(circle, rgba(200,200,200,0.25) 0%, transparent 100%)',
+        'radial-gradient(circle, rgba(210,210,210,0.18) 0%, transparent 100%)',
+        'radial-gradient(circle, rgba(195,195,195,0.18) 0%, transparent 100%)',
+        'radial-gradient(circle, rgba(205,205,205,0.15) 0%, transparent 100%)',
+      ]
+    },
+    {
+      id: 'solid-white', name: 'Pure White',
+      bg: '#ffffff',
+      swatch: '#ffffff',
+      blobs: ['none', 'none', 'none', 'none']
+    },
+    {
+      id: 'solid-sky', name: 'Sky Blue',
+      bg: '#eaf4ff',
+      swatch: '#eaf4ff',
+      blobs: ['none', 'none', 'none', 'none']
+    },
+    {
+      id: 'solid-mint', name: 'Mint',
+      bg: '#ebf8f1',
+      swatch: '#ebf8f1',
+      blobs: ['none', 'none', 'none', 'none']
+    },
+    {
+      id: 'solid-cream', name: 'Cream',
+      bg: '#fff6e9',
+      swatch: '#fff6e9',
+      blobs: ['none', 'none', 'none', 'none']
+    },
+    {
+      id: 'solid-lavender', name: 'Lavender',
+      bg: '#f3efff',
+      swatch: '#f3efff',
+      blobs: ['none', 'none', 'none', 'none']
+    },
+  ];
+
+  const currentSettings = {
+    itemGap: 17,
+    colGap: 37,
+    itemCardWidth: 100,
+    itemCardHeight: 52,
+    themeId: 'default',
+    searchEngineUrl: 'https://www.google.com/search?q={query}',
+    defaultPrimaryAction: 'add',
+    youtubePollMinutes: 60,
+    youtubeCheckDays: 0,
+    youtubeApiKey: '',
+    bgImageDataUrl: '',
+    bottomBrandText: 'ANTI ALGORITHM',
+    bottomBrandColor: '#786e78',
+    categoryTextColor: '#666666',
+    itemTextColor: '#2a2a2a'
+  };
+
+  function loadSettings() {
+    try {
+      const raw = localStorage.getItem(SETTINGS_KEY);
+      if (!raw) return;
+      const p = JSON.parse(raw);
+      if (typeof p.itemGap === 'number') currentSettings.itemGap = p.itemGap;
+      if (typeof p.colGap === 'number') currentSettings.colGap = p.colGap;
+      if (typeof p.itemCardWidth === 'number') currentSettings.itemCardWidth = p.itemCardWidth;
+      if (typeof p.itemCardHeight === 'number') currentSettings.itemCardHeight = p.itemCardHeight;
+      if (typeof p.themeId === 'string') currentSettings.themeId = p.themeId;
+      if (typeof p.searchEngineUrl === 'string' && p.searchEngineUrl.trim()) currentSettings.searchEngineUrl = p.searchEngineUrl;
+      if (p.defaultPrimaryAction === 'add' || p.defaultPrimaryAction === 'search') currentSettings.defaultPrimaryAction = p.defaultPrimaryAction;
+      if ([30, 60, 180, 360].includes(Number(p.youtubePollMinutes))) currentSettings.youtubePollMinutes = Number(p.youtubePollMinutes);
+      if ([0, 1, 2, 3].includes(Number(p.youtubeCheckDays))) currentSettings.youtubeCheckDays = Number(p.youtubeCheckDays);
+      if (typeof p.youtubeApiKey === 'string') currentSettings.youtubeApiKey = p.youtubeApiKey;
+      if (typeof p.bgImageDataUrl === 'string') currentSettings.bgImageDataUrl = p.bgImageDataUrl;
+      if (typeof p.bottomBrandText === 'string') currentSettings.bottomBrandText = p.bottomBrandText;
+      if (typeof p.bottomBrandColor === 'string') currentSettings.bottomBrandColor = p.bottomBrandColor;
+      if (typeof p.categoryTextColor === 'string') currentSettings.categoryTextColor = p.categoryTextColor;
+      if (typeof p.itemTextColor === 'string') currentSettings.itemTextColor = p.itemTextColor;
+    } catch {}
+  }
+
+  function saveSettings() {
+    try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(currentSettings)); } catch {}
+  }
+
+  function buildExportPayload() {
+    return {
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      app: {
+        categories: [...CATEGORIES],
+        links: links.map((link) => ({ ...link })),
+      },
+      settings: { ...currentSettings },
+      youtubeTitleCache: loadYoutubeTitleCache(),
+    };
+  }
+
+  function downloadTextFile(filename, content, type = 'application/json;charset=utf-8') {
+    const blob = new Blob([content], { type });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  function exportAllData() {
+    const payload = buildExportPayload();
+    const stamp = new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-');
+    downloadTextFile(`bookmark-export-${stamp}.json`, JSON.stringify(payload, null, 2));
+    const status = document.getElementById('dataTransferStatus');
+    if (status) status.textContent = 'Current data exported';
+  }
+
+  function buildSearchUrl(query) {
+    const encoded = encodeURIComponent(query);
+    const template = String(currentSettings.searchEngineUrl || '').trim() || 'https://www.google.com/search?q={query}';
+    if (template.includes('{query}')) {
+      return template.replaceAll('{query}', encoded);
+    }
+    return template.includes('?') ? `${template}&q=${encoded}` : `${template}?q=${encoded}`;
+  }
+
+  function syncSearchEnginePreset() {
+    const preset = document.getElementById('searchEnginePreset');
+    if (!preset) return;
+    const matched = Array.from(preset.options).find((option) => {
+      return option.value !== '__custom__' && option.value === currentSettings.searchEngineUrl;
+    });
+    preset.value = matched ? matched.value : '__custom__';
+  }
+
+  function applyDefaultPrimaryAction() {
+    const addBtn = document.getElementById('addBookmarkBtn');
+    const searchBtn = document.getElementById('searchBtn');
+    if (!addBtn || !searchBtn) return;
+    const primaryAction = currentSettings.defaultPrimaryAction === 'search' ? 'search' : 'add';
+    addBtn.classList.toggle('secondary-btn', primaryAction !== 'add');
+    searchBtn.classList.toggle('secondary-btn', primaryAction !== 'search');
+  }
+
+  function importAllDataFromText(rawText) {
+    let parsed;
+    try {
+      parsed = JSON.parse(rawText);
+    } catch {
+      window.alert('Import failed: the file is not valid JSON.');
+      return;
+    }
+
+    const app = parsed && typeof parsed === 'object' ? parsed.app : null;
+    const importedSettings = parsed && typeof parsed === 'object' ? parsed.settings : null;
+    const importedCache = parsed && typeof parsed === 'object' ? parsed.youtubeTitleCache : null;
+    if (!app || !Array.isArray(app.categories) || !Array.isArray(app.links)) {
+      window.alert('Import failed: the file does not match the expected format.');
+      return;
+    }
+
+    applyState(app.categories, app.links);
+    saveLocalState();
+
+    if (importedSettings && typeof importedSettings === 'object') {
+      if (typeof importedSettings.itemGap === 'number') currentSettings.itemGap = importedSettings.itemGap;
+      if (typeof importedSettings.colGap === 'number') currentSettings.colGap = importedSettings.colGap;
+      if (typeof importedSettings.itemCardWidth === 'number') currentSettings.itemCardWidth = importedSettings.itemCardWidth;
+      if (typeof importedSettings.itemCardHeight === 'number') currentSettings.itemCardHeight = importedSettings.itemCardHeight;
+      if (typeof importedSettings.themeId === 'string') currentSettings.themeId = importedSettings.themeId;
+      if (typeof importedSettings.searchEngineUrl === 'string' && importedSettings.searchEngineUrl.trim()) currentSettings.searchEngineUrl = importedSettings.searchEngineUrl;
+      if (importedSettings.defaultPrimaryAction === 'add' || importedSettings.defaultPrimaryAction === 'search') currentSettings.defaultPrimaryAction = importedSettings.defaultPrimaryAction;
+      if ([30, 60, 180, 360].includes(Number(importedSettings.youtubePollMinutes))) currentSettings.youtubePollMinutes = Number(importedSettings.youtubePollMinutes);
+      if ([0, 1, 2, 3].includes(Number(importedSettings.youtubeCheckDays))) currentSettings.youtubeCheckDays = Number(importedSettings.youtubeCheckDays);
+      if (typeof importedSettings.youtubeApiKey === 'string') currentSettings.youtubeApiKey = importedSettings.youtubeApiKey;
+      if (typeof importedSettings.bgImageDataUrl === 'string') currentSettings.bgImageDataUrl = importedSettings.bgImageDataUrl;
+      if (typeof importedSettings.bottomBrandText === 'string') currentSettings.bottomBrandText = importedSettings.bottomBrandText;
+      if (typeof importedSettings.bottomBrandColor === 'string') currentSettings.bottomBrandColor = importedSettings.bottomBrandColor;
+      if (typeof importedSettings.categoryTextColor === 'string') currentSettings.categoryTextColor = importedSettings.categoryTextColor;
+      if (typeof importedSettings.itemTextColor === 'string') currentSettings.itemTextColor = importedSettings.itemTextColor;
+      saveSettings();
+    }
+
+    if (importedCache && typeof importedCache === 'object') {
+      saveYoutubeTitleCache(importedCache);
+    }
+
+    renderCategorySelect();
+    render();
+    applyTheme(currentSettings.themeId);
+    applyBottomBrand();
+    applyTextColors();
+    applyDefaultPrimaryAction();
+    updateBgImageStatus();
+    scheduleYoutubeUpdateChecks();
+
+    const itemGapSlider = document.getElementById('itemGapSlider');
+    const colGapSlider = document.getElementById('colGapSlider');
+    const itemWidthSlider = document.getElementById('itemWidthSlider');
+    const itemHeightSlider = document.getElementById('itemHeightSlider');
+    const itemGapVal = document.getElementById('itemGapVal');
+    const colGapVal = document.getElementById('colGapVal');
+    const itemWidthVal = document.getElementById('itemWidthVal');
+    const itemHeightVal = document.getElementById('itemHeightVal');
+    const bottomBrandTextInput = document.getElementById('bottomBrandTextInput');
+    const bottomBrandColorInput = document.getElementById('bottomBrandColorInput');
+    const searchEngineInput = document.getElementById('searchEngineInput');
+    const defaultActionSelect = document.getElementById('defaultActionSelect');
+    const youtubePollMinutesSelect = document.getElementById('youtubePollMinutesSelect');
+    const youtubeCheckDaysSelect = document.getElementById('youtubeCheckDaysSelect');
+    const youtubeApiKeyInput = document.getElementById('youtubeApiKeyInput');
+    const categoryTextColorInput = document.getElementById('categoryTextColorInput');
+    const itemTextColorInput = document.getElementById('itemTextColorInput');
+    if (itemGapSlider) itemGapSlider.value = String(currentSettings.itemGap);
+    if (colGapSlider) colGapSlider.value = String(currentSettings.colGap);
+    if (itemWidthSlider) itemWidthSlider.value = String(currentSettings.itemCardWidth);
+    if (itemHeightSlider) itemHeightSlider.value = String(currentSettings.itemCardHeight);
+    if (itemGapVal) itemGapVal.textContent = String(currentSettings.itemGap);
+    if (colGapVal) colGapVal.textContent = String(currentSettings.colGap);
+    if (itemWidthVal) itemWidthVal.textContent = String(currentSettings.itemCardWidth);
+    if (itemHeightVal) itemHeightVal.textContent = String(currentSettings.itemCardHeight);
+    if (bottomBrandTextInput) bottomBrandTextInput.value = currentSettings.bottomBrandText;
+    if (bottomBrandColorInput) bottomBrandColorInput.value = currentSettings.bottomBrandColor;
+    if (searchEngineInput) searchEngineInput.value = currentSettings.searchEngineUrl;
+    if (defaultActionSelect) defaultActionSelect.value = currentSettings.defaultPrimaryAction;
+    if (youtubePollMinutesSelect) youtubePollMinutesSelect.value = String(currentSettings.youtubePollMinutes);
+    if (youtubeCheckDaysSelect) youtubeCheckDaysSelect.value = String(currentSettings.youtubeCheckDays);
+    if (youtubeApiKeyInput) youtubeApiKeyInput.value = currentSettings.youtubeApiKey;
+    if (categoryTextColorInput) categoryTextColorInput.value = currentSettings.categoryTextColor;
+    if (itemTextColorInput) itemTextColorInput.value = currentSettings.itemTextColor;
+
+    const status = document.getElementById('dataTransferStatus');
+    if (status) status.textContent = 'Import complete. The page has been updated.';
+  }
+
+  function applyTheme(id) {
+    const theme = THEMES.find(t => t.id === id) || THEMES[0];
+    document.body.style.backgroundColor = theme.bg;
+    if (currentSettings.bgImageDataUrl) {
+      document.body.style.backgroundImage = `url("${currentSettings.bgImageDataUrl}")`;
+      document.body.style.backgroundSize = 'cover';
+      document.body.style.backgroundPosition = 'center center';
+      document.body.style.backgroundRepeat = 'no-repeat';
+      document.querySelector('.bg-blobs')?.style.setProperty('display', 'none');
+    } else {
+      document.body.style.backgroundImage = '';
+      document.body.style.backgroundSize = '';
+      document.body.style.backgroundPosition = '';
+      document.body.style.backgroundRepeat = '';
+      document.querySelector('.bg-blobs')?.style.setProperty('display', '');
+    }
+    const blobs = document.querySelectorAll('.bg-blob');
+    theme.blobs.forEach((grad, i) => { if (blobs[i]) blobs[i].style.background = grad; });
+    document.querySelectorAll('.theme-swatch').forEach(el => {
+      el.classList.toggle('is-active', el.dataset.themeId === id);
+    });
+  }
+
+  function hexToRgba(hex, alpha = 0.06) {
+    const safe = String(hex || '').trim();
+    const match = safe.match(/^#([0-9a-fA-F]{6})$/);
+    if (!match) return `rgba(120, 110, 120, ${alpha})`;
+    const value = match[1];
+    const r = parseInt(value.slice(0, 2), 16);
+    const g = parseInt(value.slice(2, 4), 16);
+    const b = parseInt(value.slice(4, 6), 16);
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+  }
+
+  function applyBottomBrand() {
+    const brand = document.querySelector('.bottom-brand');
+    if (!brand) return;
+    const text = String(currentSettings.bottomBrandText || '').trim();
+    const hasChinese = /[\u3400-\u9FFF]/.test(text);
+    brand.textContent = text || ' ';
+    brand.style.color = hexToRgba(currentSettings.bottomBrandColor, 0.06);
+    brand.style.fontFamily = hasChinese ? "var(--font-main)" : '"Times New Roman", Georgia, serif';
+    brand.style.display = text ? '' : 'none';
+  }
+
+  function applyTextColors() {
+    document.documentElement.style.setProperty('--category-text-color', currentSettings.categoryTextColor);
+    document.documentElement.style.setProperty('--item-text-color', currentSettings.itemTextColor);
+  }
+
+  function updateBgImageStatus() {
+    const status = document.getElementById('bgImageStatus');
+    const clearBtn = document.getElementById('bgImageClearBtn');
+    if (!status || !clearBtn) return;
+    const usingImage = Boolean(currentSettings.bgImageDataUrl);
+    status.textContent = usingImage ? 'Using a custom background image' : 'No custom background image';
+    clearBtn.style.display = usingImage ? 'inline-flex' : 'none';
+  }
+
+  function applyBackgroundImage(file) {
+    if (!file || !file.type.startsWith('image/')) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = typeof reader.result === 'string' ? reader.result : '';
+      if (!result) return;
+      currentSettings.bgImageDataUrl = result;
+      saveSettings();
+      applyTheme(currentSettings.themeId);
+      updateBgImageStatus();
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function applyItemGap(val) {
+    document.querySelectorAll('.list-item').forEach(el => {
+      el.style.marginBottom = val + 'px';
+    });
+  }
+
+  function applyColGap(val) {
+    const sections = document.getElementById('sections');
+    if (sections) sections.style.gap = val + 'px';
+  }
+
+  function applyItemCardSize(width, height) {
+    document.querySelectorAll('.list-item').forEach((el) => {
+      el.style.width = `${width}%`;
+      el.style.minHeight = `${height}px`;
+    });
+  }
+
+  // Reapply spacing after each render.
+  const _origRender = render;
+  render = function() {
+    _origRender();
+    applyItemGap(currentSettings.itemGap);
+    applyColGap(currentSettings.colGap);
+    applyItemCardSize(currentSettings.itemCardWidth, currentSettings.itemCardHeight);
+  };
+
+  function initSettings() {
+    const trigger = document.getElementById('settingsTrigger');
+    const panel = document.getElementById('settingsPanel');
+    const itemGapSlider = document.getElementById('itemGapSlider');
+    const colGapSlider = document.getElementById('colGapSlider');
+    const itemWidthSlider = document.getElementById('itemWidthSlider');
+    const itemHeightSlider = document.getElementById('itemHeightSlider');
+    const itemGapVal = document.getElementById('itemGapVal');
+    const colGapVal = document.getElementById('colGapVal');
+    const itemWidthVal = document.getElementById('itemWidthVal');
+    const itemHeightVal = document.getElementById('itemHeightVal');
+    const swatchContainer = document.getElementById('themeSwatches');
+    const searchEnginePreset = document.getElementById('searchEnginePreset');
+    const searchEngineInput = document.getElementById('searchEngineInput');
+    const defaultActionSelect = document.getElementById('defaultActionSelect');
+    const youtubePollMinutesSelect = document.getElementById('youtubePollMinutesSelect');
+    const youtubeCheckDaysSelect = document.getElementById('youtubeCheckDaysSelect');
+    const youtubeApiKeyInput = document.getElementById('youtubeApiKeyInput');
+    const youtubeCheckNowBtn = document.getElementById('youtubeCheckNowBtn');
+    const layoutSpacingResetBtn = document.getElementById('layoutSpacingResetBtn');
+    const itemSizeResetBtn = document.getElementById('itemSizeResetBtn');
+    const bgImageInput = document.getElementById('bgImageInput');
+    const bgImageBtn = document.getElementById('bgImageBtn');
+    const bgImageClearBtn = document.getElementById('bgImageClearBtn');
+    const bottomBrandTextInput = document.getElementById('bottomBrandTextInput');
+    const bottomBrandColorInput = document.getElementById('bottomBrandColorInput');
+    const categoryTextColorInput = document.getElementById('categoryTextColorInput');
+    const itemTextColorInput = document.getElementById('itemTextColorInput');
+    const dataExportBtn = document.getElementById('dataExportBtn');
+    const dataImportBtn = document.getElementById('dataImportBtn');
+    const dataImportInput = document.getElementById('dataImportInput');
+
+    // Create theme swatches.
+    THEMES.forEach(theme => {
+      const btn = document.createElement('button');
+      btn.className = 'theme-swatch';
+      btn.dataset.themeId = theme.id;
+      btn.title = theme.name;
+      btn.style.background = theme.swatch;
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        currentSettings.themeId = theme.id;
+        applyTheme(theme.id);
+        saveSettings();
+      });
+      swatchContainer.appendChild(btn);
+    });
+
+    // Initialize slider values.
+    itemGapSlider.value = currentSettings.itemGap;
+    itemGapVal.textContent = currentSettings.itemGap;
+    colGapSlider.value = currentSettings.colGap;
+    colGapVal.textContent = currentSettings.colGap;
+    if (itemWidthSlider) itemWidthSlider.value = currentSettings.itemCardWidth;
+    if (itemHeightSlider) itemHeightSlider.value = currentSettings.itemCardHeight;
+    if (itemWidthVal) itemWidthVal.textContent = currentSettings.itemCardWidth;
+    if (itemHeightVal) itemHeightVal.textContent = currentSettings.itemCardHeight;
+    if (searchEngineInput) searchEngineInput.value = currentSettings.searchEngineUrl;
+    if (defaultActionSelect) defaultActionSelect.value = currentSettings.defaultPrimaryAction;
+    if (youtubePollMinutesSelect) youtubePollMinutesSelect.value = String(currentSettings.youtubePollMinutes);
+    if (youtubeCheckDaysSelect) youtubeCheckDaysSelect.value = String(currentSettings.youtubeCheckDays);
+    if (youtubeApiKeyInput) youtubeApiKeyInput.value = currentSettings.youtubeApiKey;
+    syncSearchEnginePreset();
+    if (categoryTextColorInput) categoryTextColorInput.value = currentSettings.categoryTextColor;
+    if (itemTextColorInput) itemTextColorInput.value = currentSettings.itemTextColor;
+    applyDefaultPrimaryAction();
+
+    itemGapSlider.addEventListener('input', (e) => {
+      e.stopPropagation();
+      const val = Number(e.target.value);
+      currentSettings.itemGap = val;
+      itemGapVal.textContent = val;
+      applyItemGap(val);
+      saveSettings();
+    });
+
+    colGapSlider.addEventListener('input', (e) => {
+      e.stopPropagation();
+      const val = Number(e.target.value);
+      currentSettings.colGap = val;
+      colGapVal.textContent = val;
+      applyColGap(val);
+      saveSettings();
+    });
+
+    if (layoutSpacingResetBtn) {
+      layoutSpacingResetBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        currentSettings.itemGap = 17;
+        currentSettings.colGap = 37;
+        itemGapSlider.value = '17';
+        colGapSlider.value = '37';
+        itemGapVal.textContent = '17';
+        colGapVal.textContent = '37';
+        applyItemGap(currentSettings.itemGap);
+        applyColGap(currentSettings.colGap);
+        saveSettings();
+      });
+    }
+
+    if (itemWidthSlider) {
+      itemWidthSlider.addEventListener('input', (e) => {
+        e.stopPropagation();
+        const val = Number(e.target.value);
+        currentSettings.itemCardWidth = val;
+        if (itemWidthVal) itemWidthVal.textContent = val;
+        applyItemCardSize(currentSettings.itemCardWidth, currentSettings.itemCardHeight);
+        saveSettings();
+      });
+    }
+
+    if (itemHeightSlider) {
+      itemHeightSlider.addEventListener('input', (e) => {
+        e.stopPropagation();
+        const val = Number(e.target.value);
+        currentSettings.itemCardHeight = val;
+        if (itemHeightVal) itemHeightVal.textContent = val;
+        applyItemCardSize(currentSettings.itemCardWidth, currentSettings.itemCardHeight);
+        saveSettings();
+      });
+    }
+
+    if (itemSizeResetBtn) {
+      itemSizeResetBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        currentSettings.itemCardWidth = 100;
+        currentSettings.itemCardHeight = 52;
+        if (itemWidthSlider) itemWidthSlider.value = '100';
+        if (itemHeightSlider) itemHeightSlider.value = '52';
+        if (itemWidthVal) itemWidthVal.textContent = '100';
+        if (itemHeightVal) itemHeightVal.textContent = '52';
+        applyItemCardSize(currentSettings.itemCardWidth, currentSettings.itemCardHeight);
+        saveSettings();
+      });
+    }
+
+    if (searchEnginePreset) {
+      searchEnginePreset.addEventListener('change', (e) => {
+        const next = String(e.target.value || '');
+        if (next === '__custom__') {
+          searchEngineInput?.focus();
+          return;
+        }
+        currentSettings.searchEngineUrl = next;
+        if (searchEngineInput) searchEngineInput.value = currentSettings.searchEngineUrl;
+        saveSettings();
+      });
+    }
+
+    if (searchEngineInput) {
+      searchEngineInput.addEventListener('change', (e) => {
+        const next = String(e.target.value || '').trim();
+        currentSettings.searchEngineUrl = next || 'https://www.google.com/search?q={query}';
+        searchEngineInput.value = currentSettings.searchEngineUrl;
+        syncSearchEnginePreset();
+        saveSettings();
+      });
+    }
+
+    if (defaultActionSelect) {
+      defaultActionSelect.addEventListener('change', (e) => {
+        const next = String(e.target.value || '');
+        currentSettings.defaultPrimaryAction = next === 'search' ? 'search' : 'add';
+        applyDefaultPrimaryAction();
+        saveSettings();
+      });
+    }
+
+    if (youtubePollMinutesSelect) {
+      youtubePollMinutesSelect.addEventListener('change', (e) => {
+        const next = Number(e.target.value || 60);
+        currentSettings.youtubePollMinutes = [30, 60, 180, 360].includes(next) ? next : 60;
+        saveSettings();
+        scheduleYoutubeUpdateChecks();
+      });
+    }
+
+    if (youtubeCheckDaysSelect) {
+      youtubeCheckDaysSelect.addEventListener('change', (e) => {
+        currentSettings.youtubeCheckDays = Number(e.target.value || 0);
+        saveSettings();
+        scheduleYoutubeUpdateChecks();
+      });
+    }
+
+    if (youtubeApiKeyInput) {
+      youtubeApiKeyInput.addEventListener('change', (e) => {
+        currentSettings.youtubeApiKey = String(e.target.value || '').trim();
+        youtubeApiKeyInput.value = currentSettings.youtubeApiKey;
+        saveSettings();
+        scheduleYoutubeUpdateChecks();
+      });
+    }
+
+    if (youtubeCheckNowBtn) {
+      youtubeCheckNowBtn.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        const apiKey = String(currentSettings.youtubeApiKey || '').trim();
+        if (!apiKey) {
+          youtubeApiKeyInput?.focus();
+          return;
+        }
+        if (!Number(currentSettings.youtubeCheckDays || 0)) {
+          youtubeCheckDaysSelect?.focus();
+          return;
+        }
+        youtubeCheckNowBtn.disabled = true;
+        const originalText = youtubeCheckNowBtn.textContent;
+        youtubeCheckNowBtn.textContent = 'Checking';
+        try {
+          await maybeCheckYoutubeUpdates({ force: true });
+        } finally {
+          youtubeCheckNowBtn.disabled = false;
+          youtubeCheckNowBtn.textContent = originalText;
+        }
+      });
+    }
+
+    if (bottomBrandTextInput) {
+      bottomBrandTextInput.value = currentSettings.bottomBrandText;
+      bottomBrandTextInput.addEventListener('input', (e) => {
+        currentSettings.bottomBrandText = e.target.value;
+        applyBottomBrand();
+        saveSettings();
+      });
+    }
+
+    if (bottomBrandColorInput) {
+      bottomBrandColorInput.value = currentSettings.bottomBrandColor;
+      bottomBrandColorInput.addEventListener('input', (e) => {
+        currentSettings.bottomBrandColor = e.target.value;
+        applyBottomBrand();
+        saveSettings();
+      });
+    }
+
+    if (categoryTextColorInput) {
+      categoryTextColorInput.addEventListener('input', (e) => {
+        currentSettings.categoryTextColor = e.target.value;
+        applyTextColors();
+        saveSettings();
+      });
+    }
+
+    if (itemTextColorInput) {
+      itemTextColorInput.addEventListener('input', (e) => {
+        currentSettings.itemTextColor = e.target.value;
+        applyTextColors();
+        saveSettings();
+      });
+    }
+
+    if (bgImageBtn && bgImageInput) {
+      bgImageBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        bgImageInput.click();
+      });
+      bgImageInput.addEventListener('change', (e) => {
+        e.stopPropagation();
+        const file = e.target.files && e.target.files[0];
+        if (file) applyBackgroundImage(file);
+        bgImageInput.value = '';
+      });
+    }
+
+    if (bgImageClearBtn) {
+      bgImageClearBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        currentSettings.bgImageDataUrl = '';
+        saveSettings();
+        applyTheme(currentSettings.themeId);
+        updateBgImageStatus();
+      });
+    }
+
+    if (dataExportBtn) {
+      dataExportBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        exportAllData();
+      });
+    }
+
+    if (dataImportBtn && dataImportInput) {
+      dataImportBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        dataImportInput.click();
+      });
+      dataImportInput.addEventListener('change', async (e) => {
+        e.stopPropagation();
+        const file = e.target.files && e.target.files[0];
+        if (!file) return;
+        try {
+          const text = await file.text();
+          importAllDataFromText(text);
+        } finally {
+          dataImportInput.value = '';
+        }
+      });
+    }
+
+    // Settings gear toggle.
+    trigger.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isOpen = panel.classList.toggle('is-open');
+      trigger.classList.toggle('is-open', isOpen);
+    });
+
+    panel.addEventListener('click', (e) => e.stopPropagation());
+
+    document.addEventListener('click', () => {
+      panel.classList.remove('is-open');
+      trigger.classList.remove('is-open');
+    });
+
+    updateBgImageStatus();
+    scheduleYoutubeUpdateChecks();
+  }
+
+  loadLocalState();
+  loadSettings();
+  renderCategorySelect();
+  render();
+  applyTheme(currentSettings.themeId);
+  applyBottomBrand();
+  applyTextColors();
+  initSettings();
+</script>
+</body>
+</html>
