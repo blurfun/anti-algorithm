@@ -3,7 +3,8 @@ Anti-Algorithm
 A personal homepage that keeps the websites and content you actually care about in front of you — instead of letting algorithms decide what you see.
 
 🌐 Live Demo: https://blurfun.github.io/anti-algorithm/
-![Anti-Algorithm Screenshot](screenshot.png)
+
+![Anti-Algorithm Screenshot](Screenshot.png)
 
 ⸻
 
